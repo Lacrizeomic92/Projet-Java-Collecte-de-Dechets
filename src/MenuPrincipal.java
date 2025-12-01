@@ -42,6 +42,18 @@ public class MenuPrincipal extends JFrame {
             }
         });
 
+        // === Touche 3 → ouvrir Theme3 ===
+        imageLabel.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+                if (e.getKeyCode() == KeyEvent.VK_3) {
+                    dispose();
+                    new Theme3();
+                }
+            }
+        });
+
         setVisible(true);
 
         // donne le focus clavier
