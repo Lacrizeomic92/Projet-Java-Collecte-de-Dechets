@@ -8,7 +8,7 @@ public class Theme1 extends JFrame {
 
     public Theme1() {
 
-        setTitle("Thème 1");
+        setTitle("Thème 1 – HO1 (Double sens)");
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -28,59 +28,38 @@ public class Theme1 extends JFrame {
         Image scaled = icon.getImage().getScaledInstance(900, 600, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaled);
 
-        // === Label contenant l’image ===
         JLabel imageLabel = new JLabel(scaledIcon);
         imageLabel.setFocusable(true);
         setContentPane(imageLabel);
 
-
-        // === Gestion des touches du clavier ===
+        // =============================
+        //     GESTION DU CLAVIER
+        // =============================
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
 
-                // <1> → Itinéraire entre deux points
-                if (e.getKeyCode() == KeyEvent.VK_1) {
-                    dispose();
-                    new ItineraireDeuxPoints();
-                }
+                switch (e.getKeyCode()) {
 
+                    case KeyEvent.VK_1:
+                        dispose();
+                        new ItineraireDeuxPoints();      // HO1 : itinéraire entre 2 intersections
+                        break;
 
-                // <ESC> → Retour au menu principal (optionnel)
-                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                    dispose();
-                    new MenuPrincipal();
-                }
-            }
-        });
+                    case KeyEvent.VK_2:
+                        dispose();
+                        new ItineraireMultiPoints();     // HO1 : tournée multipoints
+                        break;
 
-        imageLabel.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-
-                // Hypothèse 1 : Itinéraire entre deux points
-                if (e.getKeyCode() == KeyEvent.VK_1) {
-                    dispose();
-                    new ItineraireDeuxPoints();
-                }
-
-                // Hypothèse 2 : Tournée multipoints
-                if (e.getKeyCode() == KeyEvent.VK_2) {
-                    dispose();
-                    new ItineraireMultiPoints();
-                }
-
-                // Retour au Menu Principal (optionnel)
-                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                    dispose();
-                    new MenuPrincipal();
+                    case KeyEvent.VK_ESCAPE:
+                        dispose();
+                        new MenuPrincipal(1);            // Retour au menu avec HO1
+                        break;
                 }
             }
         });
 
-        // Donner le focus au label une fois la fenêtre affichée
         SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
-
         setVisible(true);
     }
 }
