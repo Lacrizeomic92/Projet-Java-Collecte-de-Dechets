@@ -5,10 +5,17 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.PriorityQueue;
+import java.util.Comparator;
 
 public class ItineraireDeuxPoints extends JFrame {
 
@@ -18,22 +25,19 @@ public class ItineraireDeuxPoints extends JFrame {
 
     public ItineraireDeuxPoints() {
 
-        setTitle("Itinéraire optimal entre deux rues");
+        setTitle("Itinéraire optimal entre deux intersections");
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // ===== PANEL DE FOND CARTOON =====
         JPanel panneauFond = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
 
-                // Fond pastel
                 g.setColor(new Color(245, 255, 240));
                 g.fillRect(0, 0, getWidth(), getHeight());
 
-                // Camion décoratif
                 try {
                     Image camion = new ImageIcon("camion.png").getImage();
                     g.drawImage(camion, 20, 380, 200, 140, this);
@@ -45,13 +49,11 @@ public class ItineraireDeuxPoints extends JFrame {
         panneauFond.setFocusable(true);
         add(panneauFond);
 
-        // ===== TITRE =====
-        JLabel titre = new JLabel("Itinéraire optimal entre deux rues", SwingConstants.CENTER);
+        JLabel titre = new JLabel("Itinéraire optimal entre deux intersections", SwingConstants.CENTER);
         titre.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 26));
         titre.setBounds(0, 20, 900, 40);
         panneauFond.add(titre);
 
-        // ===== CADRE BLANC =====
         JPanel cadre = new JPanel();
         cadre.setLayout(null);
         cadre.setBackground(new Color(255, 255, 255, 235));
@@ -59,8 +61,7 @@ public class ItineraireDeuxPoints extends JFrame {
         cadre.setBorder(BorderFactory.createLineBorder(new Color(180, 180, 180), 2, true));
         panneauFond.add(cadre);
 
-        // ===== CHAMP DÉPART =====
-        JLabel labelDepart = new JLabel("Rue de départ :");
+        JLabel labelDepart = new JLabel("Intersection de départ :");
         labelDepart.setFont(new Font("Arial", Font.PLAIN, 16));
         labelDepart.setBounds(30, 30, 200, 25);
         cadre.add(labelDepart);
@@ -70,8 +71,7 @@ public class ItineraireDeuxPoints extends JFrame {
         departField.setBounds(30, 60, 400, 35);
         cadre.add(departField);
 
-        // ===== CHAMP ARRIVEE =====
-        JLabel labelArrivee = new JLabel("Rue d'arrivée :");
+        JLabel labelArrivee = new JLabel("Intersection d'arrivée :");
         labelArrivee.setFont(new Font("Arial", Font.PLAIN, 16));
         labelArrivee.setBounds(30, 110, 200, 25);
         cadre.add(labelArrivee);
@@ -81,16 +81,13 @@ public class ItineraireDeuxPoints extends JFrame {
         arriveeField.setBounds(30, 140, 400, 35);
         cadre.add(arriveeField);
 
-        // ===== BOUTON CALCUL =====
         JButton boutonCalcul = new JButton("Calculer l'itinéraire");
         boutonCalcul.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 18));
         boutonCalcul.setBounds(95, 195, 270, 45);
         boutonCalcul.setBackground(new Color(230, 250, 230));
         boutonCalcul.setBorder(BorderFactory.createLineBorder(new Color(150, 200, 150), 2, true));
-        boutonCalcul.setFocusPainted(false);
         cadre.add(boutonCalcul);
 
-        // ===== ZONE DE RESULTAT =====
         resultatArea = new JTextArea();
         resultatArea.setFont(new Font("Arial", Font.PLAIN, 16));
         resultatArea.setEditable(false);
@@ -99,16 +96,13 @@ public class ItineraireDeuxPoints extends JFrame {
 
         JScrollPane scroll = new JScrollPane(resultatArea);
         scroll.setBounds(20, 255, 420, 100);
-        scroll.setBorder(BorderFactory.createLineBorder(new Color(180, 180, 180)));
         cadre.add(scroll);
 
-        // ===== BOUTON RETOUR =====
         JButton boutonRetour = new JButton("Retour");
         boutonRetour.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 16));
         boutonRetour.setBounds(20, 500 - 60, 120, 35);
         boutonRetour.setBackground(new Color(255, 230, 230));
         boutonRetour.setBorder(BorderFactory.createLineBorder(new Color(200, 130, 130), 2, true));
-        boutonRetour.setFocusPainted(false);
         panneauFond.add(boutonRetour);
 
         boutonRetour.addActionListener(e -> {
@@ -116,44 +110,55 @@ public class ItineraireDeuxPoints extends JFrame {
             new Theme1();
         });
 
-        // ===== ACTION BOUTON CALCUL =====
         boutonCalcul.addActionListener(e -> lancerCalcul());
-
-        // ===== RETOUR AVEC ESPACE =====
-        panneauFond.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    dispose();
-                    new Theme1();
-                }
-            }
-        });
 
         setVisible(true);
     }
 
-    // ==========================
-    //  LANCE LE CALCUL
-    // ==========================
+    // ----- Structure du résultat -----
+    private static class CheminResult {
+        List<String> rues;
+        double distance;
+        CheminResult(List<String> rues, double distance) {
+            this.rues = rues;
+            this.distance = distance;
+        }
+    }
+
+    // ----- Supprimer les doublons consécutifs -----
+    private List<String> supprimerDoublonsConsecutifs(List<String> rues) {
+        List<String> resultat = new ArrayList<>();
+        String precedente = null;
+
+        for (String r : rues) {
+            if (!r.equals(precedente)) {
+                resultat.add(r);
+            }
+            precedente = r;
+        }
+
+        return resultat;
+    }
+
+    // ----- Action bouton -----
     private void lancerCalcul() {
         try {
             String depart = departField.getText().trim();
             String arrivee = arriveeField.getText().trim();
 
             if (depart.isEmpty() || arrivee.isEmpty()) {
-                resultatArea.setText("Merci de saisir une rue de départ et une rue d'arrivée.");
+                resultatArea.setText("Veuillez saisir deux intersections (ex : S21863880)");
                 return;
             }
 
             CheminResult res = dijkstra(depart, arrivee);
 
-            if (res == null || res.chemin == null) {
-                resultatArea.setText("Aucun chemin trouvé entre ces deux rues.");
+            if (res == null) {
+                resultatArea.setText("Aucun chemin trouvé entre ces intersections.");
             } else {
                 resultatArea.setText(
-                        "Chemin optimal :\n" +
-                                String.join(" → ", res.chemin) +
+                        "Rues traversées :\n" +
+                                String.join(" → ", res.rues) +
                                 "\n\nDistance totale : " + String.format("%.2f", res.distance) + " m"
                 );
             }
@@ -163,49 +168,36 @@ public class ItineraireDeuxPoints extends JFrame {
         }
     }
 
-    // ===== Structure résultat =====
-    private static class CheminResult {
-        java.util.List<String> chemin;
-        double distance;
-
-        CheminResult(java.util.List<String> chemin, double distance) {
-            this.chemin = chemin;
-            this.distance = distance;
-        }
-    }
-
-    // ==========================
-    //  DIJKSTRA AVEC double
-    // ==========================
+    // ============================
+    //        DIJKSTRA
+    // ============================
     private CheminResult dijkstra(String depart, String arrivee) throws IOException {
 
-        // --- Lecture du fichier pondéré ---
         Map<String, Map<String, Double>> adj = new HashMap<>();
+        Map<String, Map<String, String>> rueParArc = new HashMap<>();
 
-        BufferedReader br = new BufferedReader(new FileReader("rues_nice.txt"));
+        BufferedReader br = new BufferedReader(new FileReader("nice_arcs.txt"));
         String ligne;
 
         while ((ligne = br.readLine()) != null) {
             String[] p = ligne.split(";");
-            if (p.length != 3) continue;
+            if (p.length != 4) continue;
 
-            String a = p[0].trim();
-            String b = p[1].trim();
+            String id1 = p[0].trim();
+            String id2 = p[1].trim();
+            double dist = Double.parseDouble(p[2].trim().replace(",", "."));
+            String nomRue = p[3].trim();
 
-            // Remplacer virgule éventuelle par point et parser en double
-            String distTexte = p[2].trim().replace(',', '.');
-            double d;
-            try {
-                d = Double.parseDouble(distTexte);
-            } catch (NumberFormatException e) {
-                continue; // on ignore les lignes mal formées
-            }
+            adj.putIfAbsent(id1, new HashMap<>());
+            adj.putIfAbsent(id2, new HashMap<>());
+            rueParArc.putIfAbsent(id1, new HashMap<>());
+            rueParArc.putIfAbsent(id2, new HashMap<>());
 
-            adj.putIfAbsent(a, new HashMap<>());
-            adj.putIfAbsent(b, new HashMap<>());
+            adj.get(id1).put(id2, dist);
+            adj.get(id2).put(id1, dist);
 
-            adj.get(a).put(b, d);
-            adj.get(b).put(a, d);
+            rueParArc.get(id1).put(id2, nomRue);
+            rueParArc.get(id2).put(id1, nomRue);
         }
         br.close();
 
@@ -213,33 +205,30 @@ public class ItineraireDeuxPoints extends JFrame {
             return null;
         }
 
-        // --- Dijkstra ---
         Map<String, Double> dist = new HashMap<>();
-        Map<String, String> precedent = new HashMap<>();
+        Map<String, String> prec = new HashMap<>();
 
-        for (String s : adj.keySet()) {
-            dist.put(s, Double.POSITIVE_INFINITY);
-        }
+        for (String s : adj.keySet()) dist.put(s, Double.POSITIVE_INFINITY);
         dist.put(depart, 0.0);
 
-        PriorityQueue<String> file = new PriorityQueue<>(Comparator.comparingDouble(dist::get));
-        file.add(depart);
+        PriorityQueue<String> pq = new PriorityQueue<>(Comparator.comparingDouble(dist::get));
+        pq.add(depart);
 
-        while (!file.isEmpty()) {
-            String courant = file.poll();
+        while (!pq.isEmpty()) {
+            String cur = pq.poll();
 
-            if (courant.equals(arrivee)) break;
+            if (cur.equals(arrivee)) break;
 
-            for (Map.Entry<String, Double> entry : adj.get(courant).entrySet()) {
+            for (var entry : adj.get(cur).entrySet()) {
                 String voisin = entry.getKey();
                 double poids = entry.getValue();
 
-                double nouvelleDist = dist.get(courant) + poids;
+                double nouvelleDist = dist.get(cur) + poids;
 
                 if (nouvelleDist < dist.get(voisin)) {
                     dist.put(voisin, nouvelleDist);
-                    precedent.put(voisin, courant);
-                    file.add(voisin);
+                    prec.put(voisin, cur);
+                    pq.add(voisin);
                 }
             }
         }
@@ -248,17 +237,20 @@ public class ItineraireDeuxPoints extends JFrame {
             return null;
         }
 
-        // --- Reconstruction du chemin ---
-        java.util.List<String> chemin = new ArrayList<>();
-        String courant = arrivee;
+        // ----- Reconstruction du chemin -----
+        List<String> rues = new ArrayList<>();
+        String cur = arrivee;
 
-        while (courant != null) {
-            chemin.add(0, courant);
-            courant = precedent.get(courant);
+        while (prec.containsKey(cur)) {
+            String p = prec.get(cur);
+            String rue = rueParArc.get(p).get(cur);
+            rues.add(0, rue);
+            cur = p;
         }
 
-        double distanceTotale = dist.get(arrivee);
+        // 🔥 Supprimer les doublons consécutifs
+        rues = supprimerDoublonsConsecutifs(rues);
 
-        return new CheminResult(chemin, distanceTotale);
+        return new CheminResult(rues, dist.get(arrivee));
     }
 }
