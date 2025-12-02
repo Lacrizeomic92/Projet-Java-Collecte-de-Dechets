@@ -85,13 +85,12 @@ public class ItineraireMultiPoints_HO2 extends JFrame {
         setVisible(true);
     }
 
-    // ===================================================
-    // → Lancer calcul
-    // ===================================================
+    // =====================================================
+    //                      LANCER CALCUL
+    // =====================================================
     private void lancerCalcul() {
 
         String saisie = listeField.getText().trim();
-
         if (saisie.isEmpty()) {
             resultatArea.setText("Veuillez entrer au moins une intersection.");
             return;
@@ -99,124 +98,128 @@ public class ItineraireMultiPoints_HO2 extends JFrame {
 
         List<String> points = new ArrayList<>();
         for (String p : saisie.split(",")) {
-            points.add(p.trim());
+            if (!p.trim().isEmpty()) points.add(p.trim());
         }
 
         try {
             String res = calculerTournee(points);
             resultatArea.setText(res);
-
         } catch (Exception e) {
-            resultatArea.setText("Erreur : " + e.getMessage());
+            resultatArea.setText("Aucune tournée possible avec ces intersections.");
         }
     }
 
-    // ===================================================
-    // → Charger graphe + calculer tournée
-    // ===================================================
+    // =====================================================
+    //                CHARGEMENT + TSP HEURISTIQUE
+    // =====================================================
     private String calculerTournee(List<String> aVisiter) throws IOException {
 
+        // ===== Charger graphe orienté =====
         Map<String, Map<String, Double>> adj = new HashMap<>();
         Map<String, Map<String, String>> rueArc = new HashMap<>();
 
-        BufferedReader br = new BufferedReader(new FileReader("nice_arcs.txt"));
-        String ligne;
+        try (BufferedReader br = new BufferedReader(new FileReader("nice_arcs_orientes.txt"))) {
+            String ligne;
+            while ((ligne = br.readLine()) != null) {
 
-        while ((ligne = br.readLine()) != null) {
-            String[] p = ligne.split(";");
-            if (p.length != 4) continue;
+                String[] p = ligne.split(";");
+                if (p.length != 4) continue;
 
-            String a = p[0].trim();
-            String b = p[1].trim();
-            double d = Double.parseDouble(p[2].trim().replace(",", "."));
-            String rue = p[3].trim();
+                String a = p[0].trim();
+                String b = p[1].trim();
+                String distStr = p[2].trim().replace(",", ".");
+                String rue = p[3].trim();
 
-            adj.putIfAbsent(a, new HashMap<>());
-            rueArc.putIfAbsent(a, new HashMap<>());
+                double d;
+                try { d = Double.parseDouble(distStr); }
+                catch (Exception e) { continue; }
 
-            adj.get(a).put(b, d);      // 🔥 ORIENTÉ
-            rueArc.get(a).put(b, rue); // 🔥 nom rue
-        }
-        br.close();
+                adj.putIfAbsent(a, new HashMap<>());
+                rueArc.putIfAbsent(a, new HashMap<>());
 
-        // Vérification des sommets
-        for (String s : aVisiter) {
-            if (!adj.containsKey(s)) {
-                return "⚠ Intersection inconnue : " + s;
+                adj.get(a).put(b, d);
+                rueArc.get(a).put(b, rue);
             }
         }
 
-        // =======================================
-        //    PLUS PROCHE VOISIN (intersections)
-        // =======================================
-        List<String> nonVisite = new ArrayList<>(aVisiter);
+        // Vérification sommets
+        for (String s : aVisiter) {
+            if (!adj.containsKey(s)) {
+                return "Intersection inconnue : " + s;
+            }
+        }
+
+        // ===== Plus proche voisin =====
+        List<String> aVisiterCopy = new ArrayList<>(aVisiter);
         List<String> ordre = new ArrayList<>();
 
-        String courant = nonVisite.get(0);
+        String courant = aVisiterCopy.remove(0);
         ordre.add(courant);
-        nonVisite.remove(courant);
 
-        while (!nonVisite.isEmpty()) {
+        while (!aVisiterCopy.isEmpty()) {
 
             String best = null;
             double bestDist = Double.POSITIVE_INFINITY;
 
-            for (String cible : nonVisite) {
-                double dist = dijkstraDistance(adj, courant, cible);
-                if (dist < bestDist) {
-                    bestDist = dist;
+            for (String cible : aVisiterCopy) {
+                double d = dijkstraDistance(adj, courant, cible);
+                if (d < bestDist) {
+                    bestDist = d;
                     best = cible;
                 }
             }
 
             if (best == null || bestDist == Double.POSITIVE_INFINITY) {
-                ordre.add("❌ Impossible d’accéder aux autres points à cause des sens uniques.");
-                break;
+                return "Aucune tournée possible avec ces intersections (sens uniques bloquants).";
             }
 
             ordre.add(best);
-            nonVisite.remove(best);
+            aVisiterCopy.remove(best);
             courant = best;
         }
 
-        // =======================================
-        //    RECONSTRUCTION DES RUES TRAVERSEES
-        // =======================================
+        // ===== RUES TRAVERSÉES =====
         List<String> ruesFinales = new ArrayList<>();
+        double distanceTotale = 0;
 
         for (int i = 0; i < ordre.size() - 1; i++) {
+            SegmentResult seg = dijkstraRues(adj, rueArc, ordre.get(i), ordre.get(i + 1));
 
-            List<String> segment = dijkstraRues(adj, rueArc, ordre.get(i), ordre.get(i + 1));
-            ruesFinales.addAll(segment);
+            if (seg == null) {
+                return "Aucune tournée possible avec ces intersections.";
+            }
+
+            ruesFinales.addAll(seg.rues);
+            distanceTotale += seg.distance;
         }
 
-        ruesFinales = supprimerDoublons(ruesFinales);
+        ruesFinales = enleverDoublons(ruesFinales);
 
-        return "Intersections visitées :\n" +
-                String.join(" → ", ordre) +
-                "\n\nRues traversées :\n" +
-                String.join(" → ", ruesFinales);
+        return "Ordre de visite :\n" + String.join(" → ", ordre) +
+                "\n\nRues traversées :\n" + String.join(" → ", ruesFinales) +
+                "\n\nDistance totale : " + String.format("%.2f", distanceTotale) + " m";
     }
 
-    // ===================================================
-    // → Dijkstra pour distance
-    // ===================================================
-    private double dijkstraDistance(Map<String, Map<String, Double>> adj, String depart, String arrivee) {
+    // =====================================================
+    //                   DIJKSTRA DISTANCE
+    // =====================================================
+    private double dijkstraDistance(Map<String, Map<String, Double>> adj,
+                                    String depart, String arrivee) {
 
         Map<String, Double> dist = new HashMap<>();
         for (String s : adj.keySet()) dist.put(s, Double.POSITIVE_INFINITY);
         dist.put(depart, 0.0);
 
-        PriorityQueue<String> pq = new PriorityQueue<>(Comparator.comparingDouble(dist::get));
+        PriorityQueue<String> pq =
+                new PriorityQueue<>(Comparator.comparingDouble(dist::get));
         pq.add(depart);
 
         while (!pq.isEmpty()) {
-            String cur = pq.poll();
 
+            String cur = pq.poll();
             if (cur.equals(arrivee)) return dist.get(arrivee);
 
             for (String v : adj.getOrDefault(cur, new HashMap<>()).keySet()) {
-
                 double nd = dist.get(cur) + adj.get(cur).get(v);
 
                 if (nd < dist.get(v)) {
@@ -225,16 +228,24 @@ public class ItineraireMultiPoints_HO2 extends JFrame {
                 }
             }
         }
-
         return Double.POSITIVE_INFINITY;
     }
 
-    // ===================================================
-    // → Dijkstra pour récupérer les rues
-    // ===================================================
-    private List<String> dijkstraRues(Map<String, Map<String, Double>> adj,
-                                      Map<String, Map<String, String>> rueArc,
-                                      String depart, String arrivee) {
+    // =====================================================
+    //          DIJKSTRA POUR RECUPERER LES RUES
+    // =====================================================
+    private static class SegmentResult {
+        List<String> rues;
+        double distance;
+        SegmentResult(List<String> rues, double distance) {
+            this.rues = rues;
+            this.distance = distance;
+        }
+    }
+
+    private SegmentResult dijkstraRues(Map<String, Map<String, Double>> adj,
+                                       Map<String, Map<String, String>> rueArc,
+                                       String depart, String arrivee) {
 
         Map<String, Double> dist = new HashMap<>();
         Map<String, String> prec = new HashMap<>();
@@ -247,10 +258,12 @@ public class ItineraireMultiPoints_HO2 extends JFrame {
         pq.add(depart);
 
         while (!pq.isEmpty()) {
+
             String cur = pq.poll();
             if (cur.equals(arrivee)) break;
 
             for (String v : adj.getOrDefault(cur, new HashMap<>()).keySet()) {
+
                 double nd = dist.get(cur) + adj.get(cur).get(v);
 
                 if (nd < dist.get(v)) {
@@ -261,7 +274,8 @@ public class ItineraireMultiPoints_HO2 extends JFrame {
             }
         }
 
-        // Reconstruction → rues
+        if (!prec.containsKey(arrivee)) return null;
+
         List<String> rues = new ArrayList<>();
         String cur = arrivee;
 
@@ -271,17 +285,19 @@ public class ItineraireMultiPoints_HO2 extends JFrame {
             cur = p;
         }
 
-        return rues;
+        return new SegmentResult(rues, dist.get(arrivee));
     }
 
-    // ===================================================
-    // → Suppression doublons
-    // ===================================================
-    private List<String> supprimerDoublons(List<String> r) {
+    // =====================================================
+    //           SUPPRESSION DOUBLONS SUCCESSIFS
+    // =====================================================
+    private List<String> enleverDoublons(List<String> r) {
         List<String> out = new ArrayList<>();
         String last = null;
         for (String s : r) {
-            if (!s.equals(last)) out.add(s);
+            if (!s.equals(last)) {
+                out.add(s);
+            }
             last = s;
         }
         return out;
