@@ -7,12 +7,12 @@ import java.net.URL;
 public class Accueil extends JFrame {
 
     public Accueil() {
+
         setTitle("Collecte des Déchets – Simulation");
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // === Chargement de l'image camion.png depuis le classpath ===
         URL imgUrl = Accueil.class.getResource("/camion.png");
         if (imgUrl == null) {
             JOptionPane.showMessageDialog(this,
@@ -27,23 +27,22 @@ public class Accueil extends JFrame {
         ImageIcon scaledIcon = new ImageIcon(scaled);
 
         JLabel imageLabel = new JLabel(scaledIcon);
-        imageLabel.setFocusable(true); // le label recevra le focus
+        imageLabel.setFocusable(true);
         setContentPane(imageLabel);
 
-        // === Listener clavier (ESPACE) sur le label ===
+        // ====== ESPACE → ChoixHypothèses ======
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    dispose();            // fermer la fenêtre d'accueil
-                    new MenuPrincipal();  // ouvrir le menu principal
+                    dispose();
+                    new ChoixHypotheses();
                 }
             }
         });
 
         setVisible(true);
 
-        // Donner le focus au label pour qu'il reçoive les touches
         SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
     }
 }
