@@ -2,10 +2,17 @@ import javax.swing.*;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.PriorityQueue;
+import java.util.Comparator;
 
 public class ItineraireDeuxPoints_HO2 extends JFrame {
 
@@ -101,26 +108,21 @@ public class ItineraireDeuxPoints_HO2 extends JFrame {
             return;
         }
 
-        try {
-            CheminResult r = dijkstraOrienté(depart, arrivee);
+        CheminResult r = calculerItineraire(depart, arrivee);
 
-            if (r == null || r.distance == Double.POSITIVE_INFINITY) {
-                resultatArea.setText("❌ Aucun chemin possible (sens uniques bloquants).");
-            } else {
-                resultatArea.setText(
-                        "Rues traversées :\n" +
-                                String.join(" → ", r.rues) +
-                                "\n\nDistance totale : " + String.format("%.2f", r.distance) + " m"
-                );
-            }
-
-        } catch (Exception e) {
-            resultatArea.setText("Erreur : " + e.getMessage());
+        if (r == null || r.distance == Double.POSITIVE_INFINITY) {
+            resultatArea.setText("Aucun itinéraire n'existe entre ces deux intersections.");
+        } else {
+            resultatArea.setText(
+                    "Rues traversées :\n" +
+                            String.join(" → ", r.rues) +
+                            "\n\nDistance totale : " + String.format("%.2f", r.distance) + " m"
+            );
         }
     }
 
     // ==========================================================
-    //   STRUCTURE RESULTAT
+    //                  STRUCTURE DE RESULTAT
     // ==========================================================
     private static class CheminResult {
         List<String> rues;
@@ -132,42 +134,45 @@ public class ItineraireDeuxPoints_HO2 extends JFrame {
     }
 
     // ==========================================================
-    //              DIJKSTRA ORIENTÉ (HO2)
+    //                     DIJKSTRA ORIENTÉ
     // ==========================================================
-    private CheminResult dijkstraOrienté(String depart, String arrivee) throws IOException {
+    private CheminResult calculerItineraire(String depart, String arrivee) {
 
         Map<String, Map<String, Double>> adj = new HashMap<>();
         Map<String, Map<String, String>> rueArc = new HashMap<>();
 
-        BufferedReader br = new BufferedReader(new FileReader("nice_arcs_orientes.txt"));
-        String line;
+        try (BufferedReader br = new BufferedReader(new FileReader("nice_arcs_orientes.txt"))) {
 
-        while ((line = br.readLine()) != null) {
+            String line;
+            while ((line = br.readLine()) != null) {
 
-            String[] p = line.split(";");
-            if (p.length != 4) continue;
+                String[] p = line.split(";");
+                if (p.length != 4) continue;
 
-            String a = p[0].trim();
-            String b = p[1].trim();
-            String distStr = p[2].trim().replace(",", ".");
-            String rue = p[3].trim();
+                String a = p[0].trim();
+                String b = p[1].trim();
+                String distStr = p[2].trim().replace(",", ".");
+                String rue = p[3].trim();
 
-            if (distStr.isEmpty()) continue;
+                if (a.isEmpty() || b.isEmpty() || distStr.isEmpty()) continue;
 
-            double w;
-            try {
-                w = Double.parseDouble(distStr);
-            } catch (Exception e) {
-                continue;
+                double d;
+                try {
+                    d = Double.parseDouble(distStr);
+                } catch (Exception ex) {
+                    continue;
+                }
+
+                adj.putIfAbsent(a, new HashMap<>());
+                rueArc.putIfAbsent(a, new HashMap<>());
+
+                adj.get(a).put(b, d);
+                rueArc.get(a).put(b, rue);
             }
 
-            adj.putIfAbsent(a, new HashMap<>());
-            rueArc.putIfAbsent(a, new HashMap<>());
-
-            adj.get(a).put(b, w);
-            rueArc.get(a).put(b, rue);
+        } catch (Exception e) {
+            return null;
         }
-        br.close();
 
         if (!adj.containsKey(depart)) return null;
 
@@ -191,13 +196,10 @@ public class ItineraireDeuxPoints_HO2 extends JFrame {
 
             for (String v : voisins.keySet()) {
 
-                Double poids = voisins.get(v);
-                if (poids == null) continue;
+                double newDist = dist.get(cur) + voisins.get(v);
 
-                double nd = dist.get(cur) + poids;
-
-                if (nd < dist.get(v)) {
-                    dist.put(v, nd);
+                if (newDist < dist.getOrDefault(v, Double.POSITIVE_INFINITY)) {
+                    dist.put(v, newDist);
                     prec.put(v, cur);
                     pq.add(v);
                 }
@@ -214,21 +216,27 @@ public class ItineraireDeuxPoints_HO2 extends JFrame {
             String p = prec.get(cur);
             String rue = rueArc.get(p).get(cur);
             if (rue == null) rue = "(Rue inconnue)";
-
             rues.add(0, rue);
             cur = p;
         }
 
-        rues = enleverDoublons(rues);
+        // 🔥 Supprimer les répétitions successives
+        rues = nettoyerRues(rues);
 
         return new CheminResult(rues, dist.get(arrivee));
     }
 
-    private List<String> enleverDoublons(List<String> r) {
+    // ==========================================================
+    //                 SUPPRIMER LES REPETITIONS
+    // ==========================================================
+    private List<String> nettoyerRues(List<String> r) {
         List<String> out = new ArrayList<>();
         String last = null;
+
         for (String s : r) {
-            if (!s.equals(last)) out.add(s);
+            if (last == null || !s.equals(last)) {
+                out.add(s);
+            }
             last = s;
         }
         return out;
