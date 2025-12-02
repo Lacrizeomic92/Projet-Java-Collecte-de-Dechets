@@ -6,18 +6,26 @@ import java.net.URL;
 
 public class MenuPrincipal extends JFrame {
 
-    public MenuPrincipal() {
+    private int hypothese;  // 1 = HO1, 2 = HO2, 3 = HO3
+
+    public MenuPrincipal(int hypotheseChoisie) {
+
+        this.hypothese = hypotheseChoisie;
+
         setTitle("Menu Principal");
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // === Chargement de menu.png ===
+        // ===============================
+        //   CHARGEMENT DE L’IMAGE menu.png
+        // ===============================
         URL imgUrl = MenuPrincipal.class.getResource("/menu.png");
+
         if (imgUrl == null) {
             JOptionPane.showMessageDialog(this,
-                    "Impossible de trouver l'image menu.png\n" +
-                            "Vérifie qu'elle est bien dans src/",
+                    "Impossible de trouver menu.png\n" +
+                            "Assure-toi qu’elle est bien dans src/",
                     "Erreur image",
                     JOptionPane.ERROR_MESSAGE);
         }
@@ -30,33 +38,40 @@ public class MenuPrincipal extends JFrame {
         imageLabel.setFocusable(true);
         setContentPane(imageLabel);
 
-        // === Touche 1 → ouvrir Theme1 ===
+        // ===============================
+        //     GESTION DES TOUCHES
+        // ===============================
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
 
+                // ======= THÈME 1 =======
                 if (e.getKeyCode() == KeyEvent.VK_1) {
                     dispose();
-                    new Theme1();
+
+                    if (hypothese == 1)
+                        new Theme1();          // HO1 — double sens
+
+                    else if (hypothese == 2)
+                        new Theme1_HO2();      // HO2 — sens unique
+
+                    else
+                        JOptionPane.showMessageDialog(null,
+                                "HO3 n'est pas encore disponible !");
                 }
-            }
-        });
 
-        // === Touche 3 → ouvrir Theme3 ===
-        imageLabel.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
+                // ======= RETOUR =======
+                if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE ||
+                        e.getKeyCode() == KeyEvent.VK_ESCAPE) {
 
-                if (e.getKeyCode() == KeyEvent.VK_3) {
                     dispose();
-                    new Theme3();
+                    new ChoixHypotheses();
                 }
             }
         });
+
+        SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
 
         setVisible(true);
-
-        // donne le focus clavier
-        SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
     }
 }
