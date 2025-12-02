@@ -18,14 +18,14 @@ public class MenuPrincipal extends JFrame {
         setLocationRelativeTo(null);
 
         // ===============================
-        //   CHARGEMENT DE L’IMAGE menu.png
+        //   CHARGEMENT DE L'IMAGE menu.png
         // ===============================
         URL imgUrl = MenuPrincipal.class.getResource("/menu.png");
 
         if (imgUrl == null) {
             JOptionPane.showMessageDialog(this,
                     "Impossible de trouver menu.png\n" +
-                            "Assure-toi qu’elle est bien dans src/",
+                            "Assure-toi qu'elle est bien dans src/",
                     "Erreur image",
                     JOptionPane.ERROR_MESSAGE);
         }
@@ -51,13 +51,18 @@ public class MenuPrincipal extends JFrame {
 
                     if (hypothese == 1)
                         new Theme1();          // HO1 — double sens
-
                     else if (hypothese == 2)
                         new Theme1_HO2();      // HO2 — sens unique
-
                     else
                         JOptionPane.showMessageDialog(null,
                                 "HO3 n'est pas encore disponible !");
+                }
+
+                // ======= THÈME 3 =======
+                if (e.getKeyCode() == KeyEvent.VK_3) {
+                    dispose();
+                    // Le Thème 3 s'ouvre pour toutes les hypothèses
+                    new Theme3();              // Thème 3 — Collecte de déchets
                 }
 
                 // ======= RETOUR =======
@@ -71,7 +76,6 @@ public class MenuPrincipal extends JFrame {
         });
 
         SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
-
         setVisible(true);
     }
 }
