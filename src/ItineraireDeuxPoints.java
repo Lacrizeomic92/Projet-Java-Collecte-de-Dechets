@@ -116,7 +116,7 @@ public class ItineraireDeuxPoints extends JFrame {
     }
 
     // ----- Structure du résultat -----
-    private static class CheminResult {
+    static class CheminResult {
         List<String> rues;
         double distance;
         CheminResult(List<String> rues, double distance) {
@@ -151,7 +151,7 @@ public class ItineraireDeuxPoints extends JFrame {
                 return;
             }
 
-            CheminResult res = dijkstra(depart, arrivee);
+            DijkstraNice.CheminResult res = DijkstraNice.dijkstra(depart, arrivee);
 
             if (res == null) {
                 resultatArea.setText("Aucun chemin trouvé entre ces intersections.");
@@ -171,7 +171,7 @@ public class ItineraireDeuxPoints extends JFrame {
     // ============================
     //        DIJKSTRA
     // ============================
-    private CheminResult dijkstra(String depart, String arrivee) throws IOException {
+    CheminResult dijkstra(String depart, String arrivee) throws IOException {
 
         Map<String, Map<String, Double>> adj = new HashMap<>();
         Map<String, Map<String, String>> rueParArc = new HashMap<>();

@@ -58,11 +58,24 @@ public class MenuPrincipal extends JFrame {
                                 "HO3 n'est pas encore disponible !");
                 }
 
+                // ======= THÈME 2 =======
+                if (e.getKeyCode() == KeyEvent.VK_2) {
+                    dispose();
+
+                    try {
+                        // Le Thème 2 fonctionne dans HO1 d'abord (CDC),
+                        // mais s'ouvre aussi en HO2/HO3 puisqu'il dépend du graphe existant.
+                        new Theme2();
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(null,
+                                "Erreur lors de l'ouverture du Thème 2 : " + ex.getMessage());
+                    }
+                }
+
                 // ======= THÈME 3 =======
                 if (e.getKeyCode() == KeyEvent.VK_3) {
                     dispose();
-                    // Le Thème 3 s'ouvre pour toutes les hypothèses
-                    new Theme3();              // Thème 3 — Collecte de déchets
+                    new Theme3();              // Thème 3 — Planification de secteurs
                 }
 
                 // ======= RETOUR =======
