@@ -1,0 +1,23 @@
+NODES
+A Gambetta_Promenade
+B Gambetta_VictorHugo
+C VictorHugo_JeanMedecin
+D JeanMedecin_Massena
+E Massena_Garibaldi
+F Garibaldi_Port
+G Republique_Garibaldi
+H GareDuSud_Liberation
+I Liberation_JeanMedecin
+
+EDGES
+A B 600 TWO_WAY
+B C 450 ONE_WAY
+C D 300 ONE_WAY
+D E 250 TWO_WAY
+E F 500 ONE_WAY
+E G 150 TWO_WAY
+G F 400 TWO_WAY
+H I 350 ONE_WAY
+I D 700 TWO_WAY
+B H 800 TWO_WAY
+A F 2000 TWO_WAY
