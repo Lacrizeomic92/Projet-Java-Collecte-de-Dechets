@@ -55,6 +55,11 @@ public class Theme1 extends JFrame {
                         dispose();
                         new MenuPrincipal(1);            // Retour au menu avec HO1
                         break;
+
+                    case KeyEvent.VK_0:
+                        dispose();
+                        new MenuPrincipal(1);
+                        break;
                 }
             }
         });
