@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Theme2 extends JFrame {
 
-    private static final int CAPACITE_CAMION = 10;  // Capacité max (CDC)
+    private static final int CAPACITE_CAMION = 10;
 
     public Theme2() {
 
@@ -16,6 +16,9 @@ public class Theme2 extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
+        // ---------------------------------------
+        // CHARGEMENT IMAGE / LABEL (PAS DE FOCUS)
+        // ---------------------------------------
         JLabel label;
         URL imgUrl = Theme2.class.getResource("/Theme2.png");
         ImageIcon icon = (imgUrl != null ? new ImageIcon(imgUrl) : null);
@@ -28,21 +31,28 @@ public class Theme2 extends JFrame {
             label.setFont(new Font("Arial", Font.BOLD, 40));
         }
 
-        label.setFocusable(true);
+        label.setFocusable(false); // IMPORTANT !!!
         setContentPane(label);
 
-        label.addKeyListener(new KeyAdapter() {
+        // ---------------------------------------
+        //        KEY LISTENER SUR LA FENETRE
+        // ---------------------------------------
+        addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
 
                 try {
-                    switch (e.getKeyCode()) {
+                    int code = e.getKeyCode();
+
+                    switch (code) {
 
                         case KeyEvent.VK_1:
+                        case KeyEvent.VK_NUMPAD1:
                             executerPPV();
                             break;
 
                         case KeyEvent.VK_2:
+                        case KeyEvent.VK_NUMPAD2:
                             executerMST();
                             break;
 
@@ -53,21 +63,45 @@ public class Theme2 extends JFrame {
                     }
 
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null,
-                            "Erreur : " + ex.getMessage(),
-                            "Erreur",
-                            JOptionPane.ERROR_MESSAGE);
+                    afficherResultat("Erreur", "Erreur : " + ex.getMessage());
                 }
             }
         });
 
-        SwingUtilities.invokeLater(label::requestFocusInWindow);
+        // ---------------------------------------
+        // DONNER LE FOCUS AU FRAME, PAS AU LABEL
+        // ---------------------------------------
+        setFocusable(true);
+        SwingUtilities.invokeLater(this::requestFocusInWindow);
+
         setVisible(true);
     }
 
-    // ======================================================
-    //           APPROCHE 1 : PLUS PROCHE VOISIN
-    // ======================================================
+    // ----------------------------------------------------
+    //      FENÊTRE SCROLLABLE POUR AFFICHAGE DES RÉSULTATS
+    // ----------------------------------------------------
+    private void afficherResultat(String titre, String contenu) {
+
+        JTextArea area = new JTextArea(contenu);
+        area.setEditable(false);
+        area.setFont(new Font("Monospaced", Font.PLAIN, 14));
+        area.setLineWrap(false);        // Pas de wrap vertical
+        area.setWrapStyleWord(false);   // Pas de wrap horizontal
+
+        JScrollPane scroll = new JScrollPane(area);
+        scroll.setPreferredSize(new Dimension(800, 500));
+
+        JFrame frame = new JFrame(titre);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.add(scroll);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    // ----------------------------------------------------
+    //                 APPROCHE PPV
+    // ----------------------------------------------------
     private void executerPPV() throws Exception {
 
         Depot depot = ChargeurPointsCollecte.chargerDepot("points_collecte_nice.txt");
@@ -75,7 +109,7 @@ public class Theme2 extends JFrame {
 
         List<PointCollecte> ordre = PlusProcheVoisin.calculer(depot, points);
 
-        JOptionPane.showMessageDialog(this, formatPPV(ordre, depot));
+        afficherResultat("Résultat PPV", formatPPV(ordre, depot));
     }
 
     private String formatPPV(List<PointCollecte> ordre, Depot depot) {
@@ -93,55 +127,63 @@ public class Theme2 extends JFrame {
         return sb.toString();
     }
 
-    // ======================================================
-    //      APPROCHE 2 : MST + DFS + SHORTCUTTING
-    // ======================================================
+    // ----------------------------------------------------
+    //                 APPROCHE MST
+    // ----------------------------------------------------
     private void executerMST() throws Exception {
 
         Depot depot = ChargeurPointsCollecte.chargerDepot("points_collecte_nice.txt");
         List<PointCollecte> points = ChargeurPointsCollecte.chargerPoints("points_collecte_nice.txt");
 
-        int[] parent = MSTPrim.construire(points, depot);
+        MSTPrimResult mst = MSTPrim.construire(points, depot);
 
-        List<Integer> parcours = ParcoursPrefixe.dfs(parent);
+        List<Integer> parcours = ParcoursPrefixe.dfs(mst.parent);
         List<Integer> ordre = Shortcutting.appliquer(parcours);
 
-        String resultat = formatMST(ordre, points, depot);
-
-        JOptionPane.showMessageDialog(this, resultat);
+        afficherResultat("Résultat MST",
+                formatMST(ordre, points, depot, mst.ids));
     }
 
     private String formatMST(List<Integer> ordre,
                              List<PointCollecte> points,
-                             Depot depot) {
+                             Depot depot,
+                             List<String> ids) {
 
         StringBuilder sb = new StringBuilder("Approche : MST + DFS + Shortcutting\n\n");
 
         sb.append("Départ : Dépôt (").append(depot.getSommetId()).append(")\n\n");
 
         for (int idx : ordre) {
+
             if (idx == 0) continue;
-            PointCollecte pc = points.get(idx - 1);
+
+            String idPoint = ids.get(idx);
+
+            PointCollecte pc = points.stream()
+                    .filter(p -> p.getSommetId().equals(idPoint))
+                    .findFirst()
+                    .orElse(null);
+
+            if (pc == null) continue;
+
             sb.append(" → ").append(pc.getNom())
                     .append(" (").append(pc.getSommetId()).append(")")
                     .append(" | contenance = ").append(pc.getContenance()).append("\n");
         }
 
-        sb.append("\n--- Découpage selon la capacité du camion (C = ")
+        sb.append("\n--- Découpage selon capacité (C=")
                 .append(CAPACITE_CAMION)
                 .append(") ---\n\n");
 
-        sb.append(decouperTournees(ordre, points, depot));
+        sb.append(decouperTournees(ordre, points, depot, ids));
 
         return sb.toString();
     }
 
-    // ======================================================
-    //      DÉCOUPAGE DES TOURNÉES (CDC)
-    // ======================================================
     private String decouperTournees(List<Integer> ordre,
                                     List<PointCollecte> points,
-                                    Depot depot) {
+                                    Depot depot,
+                                    List<String> ids) {
 
         StringBuilder sb = new StringBuilder();
 
@@ -153,7 +195,16 @@ public class Theme2 extends JFrame {
 
         for (int idx : ordre) {
 
-            PointCollecte pc = points.get(idx - 1);
+            if (idx == 0) continue;
+
+            String idPoint = ids.get(idx);
+
+            PointCollecte pc = points.stream()
+                    .filter(p -> p.getSommetId().equals(idPoint))
+                    .findFirst()
+                    .orElse(null);
+
+            if (pc == null) continue;
 
             if (pc.getContenance() > capaciteRestante) {
                 sb.append("Retour → Dépôt\n\n");
