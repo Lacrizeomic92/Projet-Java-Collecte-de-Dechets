@@ -87,6 +87,11 @@ public class Theme3 extends JFrame {
                         dispose();
                         new ChoixHypotheses();
                         break;
+
+                    case KeyEvent.VK_0:
+                        dispose();
+                        new MenuPrincipal(1);
+                        break;
                 }
             }
         });
