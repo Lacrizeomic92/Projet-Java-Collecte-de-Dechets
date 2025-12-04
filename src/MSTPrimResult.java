@@ -2,11 +2,13 @@ import java.util.List;
 
 public class MSTPrimResult {
 
-    public int[] parent;     // parent[i] = parent de i dans le MST
-    public List<String> ids; // ids.get(i) = sommet correspondant à l'index i
+    public int[] parent;           // parent[i]
+    public List<String> ids;       // ids.get(i)
+    public double[][] poids;       // matrice des distances
 
-    public MSTPrimResult(int[] parent, List<String> ids) {
+    public MSTPrimResult(int[] parent, List<String> ids, double[][] poids) {
         this.parent = parent;
         this.ids = ids;
+        this.poids = poids;
     }
 }

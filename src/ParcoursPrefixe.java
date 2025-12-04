@@ -3,6 +3,7 @@ import java.util.*;
 public class ParcoursPrefixe {
 
     public static List<Integer> dfs(int[] parent) {
+
         int n = parent.length;
         List<Integer>[] adj = new List[n];
 
@@ -13,11 +14,13 @@ public class ParcoursPrefixe {
 
         List<Integer> ordre = new ArrayList<>();
         dfsRec(0, adj, ordre);
+
         return ordre;
     }
 
     private static void dfsRec(int u, List<Integer>[] adj, List<Integer> out) {
         out.add(u);
-        for (int v : adj[u]) dfsRec(v, adj, out);
+        for (int v : adj[u])
+            dfsRec(v, adj, out);
     }
 }

@@ -166,22 +166,30 @@ public class Theme2 extends JFrame {
 
         MSTPrimResult mst = MSTPrim.construire(points, depot);
 
+        // 1) DFS sur le MST
         List<Integer> parcours = ParcoursPrefixe.dfs(mst.parent);
+
+        // 2) Shortcutting
         List<Integer> ordre = Shortcutting.appliquer(parcours);
 
-        afficherResultat("Résultat MST",
-                formatMST(ordre, points, depot, mst.ids));
+        // 3) Formatage du résultat (avec distances + rues)
+        afficherResultat("Résultat MST", formatMST(ordre, points, depot, mst.ids));
     }
+
 
     private String formatMST(List<Integer> ordre,
                              List<PointCollecte> points,
                              Depot depot,
                              List<String> ids) {
 
-        StringBuilder sb = new StringBuilder("Approche : MST + DFS + Shortcutting\n\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== Approche : MST + DFS + Shortcutting ===\n\n");
+        sb.append("Départ : ").append(depot.getSommetId()).append("\n\n");
 
-        sb.append("Départ : Dépôt (").append(depot.getSommetId()).append(")\n\n");
+        double distanceTotale = 0.0;
+        String courant = depot.getSommetId();
 
+        // Parcours des points dans l'ordre MST
         for (int idx : ordre) {
 
             if (idx == 0) continue;
@@ -195,10 +203,53 @@ public class Theme2 extends JFrame {
 
             if (pc == null) continue;
 
-            sb.append(" → ").append(pc.getNom())
-                    .append(" (").append(pc.getSommetId()).append(")")
-                    .append(" | contenance = ").append(pc.getContenance()).append("\n");
+            // ---------- CORRECTION : TRY/CATCH SUR LE DIJKSTRA ----------
+            DijkstraNice.CheminResult res;
+            try {
+                res = DijkstraNice.dijkstra(courant, idPoint);
+            } catch (Exception e) {
+                sb.append("ERREUR : Impossible d'obtenir le chemin entre ")
+                        .append(courant).append(" et ").append(idPoint).append("\n\n");
+                courant = idPoint;
+                continue;
+            }
+
+            sb.append(courant).append(" → ").append(idPoint)
+                    .append(" (").append(pc.getNom()).append(")\n");
+            sb.append("   Distance : ").append(String.format("%.2f m", res.distance)).append("\n");
+            sb.append("   Rues :\n");
+
+            for (String rue : res.rues)
+                sb.append("      - ").append(rue).append("\n");
+
+            sb.append("\n");
+
+            distanceTotale += res.distance;
+            courant = idPoint;
         }
+
+        // ---------- RETOUR AU DÉPÔT ----------
+        try {
+            DijkstraNice.CheminResult retour = DijkstraNice.dijkstra(courant, depot.getSommetId());
+
+            sb.append(courant).append(" → ").append(depot.getSommetId()).append(" (Retour dépôt)\n");
+            sb.append("   Distance : ").append(String.format("%.2f m", retour.distance)).append("\n");
+            sb.append("   Rues :\n");
+
+            for (String rue : retour.rues)
+                sb.append("      - ").append(rue).append("\n");
+
+            sb.append("\n");
+
+            distanceTotale += retour.distance;
+
+        } catch (Exception e) {
+            sb.append("ERREUR : Impossible de retourner au dépôt.\n");
+        }
+
+        sb.append("=== Distance totale MST : ")
+                .append(String.format("%.2f m", distanceTotale))
+                .append(" ===\n");
 
         sb.append("\n--- Découpage selon capacité (C=")
                 .append(CAPACITE_CAMION)
@@ -208,6 +259,7 @@ public class Theme2 extends JFrame {
 
         return sb.toString();
     }
+
 
     private String decouperTournees(List<Integer> ordre,
                                     List<PointCollecte> points,
