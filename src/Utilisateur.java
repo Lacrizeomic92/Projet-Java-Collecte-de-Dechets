@@ -36,15 +36,21 @@ public class Utilisateur extends JFrame {
             @Override
             public void keyPressed(KeyEvent e) {
 
-                // ----------- 🔹 OPTION 1 : COLLECTIVITE -----------
+                // ----------- 🔹 OPTION 1 : COLLECTIVITÉ -----------
                 if (e.getKeyCode() == KeyEvent.VK_1) {
                     choixUtilisateur = 1;
-                    dispose();                         // ferme cette fenêtre
-                    new Collectivite();                 // ouvre la page Collectivité (AVEC L'IMAGE)
+                    dispose();
+                    new Collectivite();
                 }
 
+                // ----------- 🔹 OPTION 2 : CHOIX DES HYPOTHÈSES -----------
+                if (e.getKeyCode() == KeyEvent.VK_2) {
+                    choixUtilisateur = 2;
+                    dispose();
+                    new ChoixHypotheses();  // 👈 ouverture correcte
+                }
 
-                // ----------- 🔹 RETOUR EN ARRIÈRE -----------
+                // ----------- 🔹 RETOUR (ÉCHAP) -----------
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     dispose();
                     new Accueil();
@@ -52,8 +58,10 @@ public class Utilisateur extends JFrame {
             }
         });
 
+        // Focus clavier sur l'image
         SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
 
+        // Sécurisation du focus
         Timer focusTimer = new Timer(100, e -> imageLabel.requestFocusInWindow());
         focusTimer.setRepeats(false);
         focusTimer.start();
