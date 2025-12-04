@@ -43,6 +43,10 @@ public class Collectivite extends JFrame {
                     dispose();
                     new Utilisateur(); // Retour au menu utilisateur
                 }
+                if (e.getKeyCode() == KeyEvent.VK_0) {
+                    dispose();
+                    new Utilisateur(); // Retour au menu utilisateur
+                }
             }
         });
 
