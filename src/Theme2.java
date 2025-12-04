@@ -100,32 +100,61 @@ public class Theme2 extends JFrame {
     }
 
     // ----------------------------------------------------
-    //                 APPROCHE PPV
-    // ----------------------------------------------------
+//                 APPROCHE PPV (CORRIGÉE)
+// ----------------------------------------------------
     private void executerPPV() throws Exception {
 
         Depot depot = ChargeurPointsCollecte.chargerDepot("points_collecte_nice.txt");
         List<PointCollecte> points = ChargeurPointsCollecte.chargerPoints("points_collecte_nice.txt");
 
-        List<PointCollecte> ordre = PlusProcheVoisin.calculer(depot, points);
+        // Le nouveau PPV renvoie maintenant un objet résultat
+        PlusProcheVoisin.ResultatPPV resultat = PlusProcheVoisin.calculer(depot, points);
 
-        afficherResultat("Résultat PPV", formatPPV(ordre, depot));
+        afficherResultat("Résultat PPV", formatPPV(resultat, depot));
     }
 
-    private String formatPPV(List<PointCollecte> ordre, Depot depot) {
 
-        StringBuilder sb = new StringBuilder("Approche : Plus Proche Voisin\n\n");
+    private String formatPPV(PlusProcheVoisin.ResultatPPV resultat, Depot depot) {
 
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("=== Approche : Plus Proche Voisin ===\n\n");
         sb.append("Départ : Dépôt (").append(depot.getSommetId()).append(")\n\n");
 
-        for (PointCollecte pc : ordre) {
-            sb.append(" → ").append(pc.getNom())
-                    .append(" (").append(pc.getSommetId()).append(")")
-                    .append(" | contenance = ").append(pc.getContenance()).append("\n");
+        int etapeNum = 1;
+
+        for (PlusProcheVoisin.Etape etape : resultat.etapes) {
+
+            sb.append(etapeNum++)
+                    .append(") ")
+                    .append(etape.depart)
+                    .append(" → ")
+                    .append(etape.arrivee)
+                    .append("\n");
+
+            sb.append("   Distance : ")
+                    .append(String.format("%.2f m", etape.distance))
+                    .append("\n");
+
+            sb.append("   Rues empruntées :\n");
+
+            if (etape.chemin.isEmpty()) {
+                sb.append("      (Aucune rue renseignée)\n");
+            } else {
+                for (String rue : etape.chemin) {
+                    sb.append("      - ").append(rue).append("\n");
+                }
+            }
+            sb.append("\n");
         }
+
+        sb.append("=== Distance totale parcourue : ")
+                .append(String.format("%.2f m", resultat.distanceTotale))
+                .append(" ===\n");
 
         return sb.toString();
     }
+
 
     // ----------------------------------------------------
     //                 APPROCHE MST
