@@ -60,6 +60,11 @@ public class Theme2 extends JFrame {
                             dispose();
                             new MenuPrincipal(1);
                             break;
+
+                        case KeyEvent.VK_0:
+                            dispose();
+                            new MenuPrincipal(1);
+                            break;
                     }
 
                 } catch (Exception ex) {
