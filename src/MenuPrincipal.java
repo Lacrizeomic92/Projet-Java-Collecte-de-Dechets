@@ -63,9 +63,7 @@ public class MenuPrincipal extends JFrame {
                     dispose();
 
                     try {
-                        // Le Thème 2 fonctionne dans HO1 d'abord (CDC),
-                        // mais s'ouvre aussi en HO2/HO3 puisqu'il dépend du graphe existant.
-                        new Theme2();
+                        new Theme2();          // Thème 2 disponible pour toutes les hypothèses
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(null,
                                 "Erreur lors de l'ouverture du Thème 2 : " + ex.getMessage());
@@ -75,7 +73,7 @@ public class MenuPrincipal extends JFrame {
                 // ======= THÈME 3 =======
                 if (e.getKeyCode() == KeyEvent.VK_3) {
                     dispose();
-                    new Theme3();              // Thème 3 — Planification de secteurs
+                    new Theme3();              // Thème 3 — Collecte de déchets (ou autre nom)
                 }
 
                 // ======= RETOUR =======
