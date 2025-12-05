@@ -80,8 +80,11 @@ public class ModificationsCirculation extends JFrame {
                     e.from.equalsIgnoreCase(s2) && e.to.equalsIgnoreCase(s1);
 
             if (matchDirect || matchInverse) {
-                e.ouverte = false;
-                JOptionPane.showMessageDialog(this, "Rue " + s1 + "-" + s2 + " fermée !");
+                e.fermee = true;
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Rue " + s1 + " - " + s2 + " fermée."
+                );
                 return;
             }
         }
@@ -113,10 +116,14 @@ public class ModificationsCirculation extends JFrame {
                     e.from.equalsIgnoreCase(s2) && e.to.equalsIgnoreCase(s1);
 
             if (matchDirect || matchInverse) {
-                e.ouverte = true;
-                JOptionPane.showMessageDialog(this, "Rue " + s1 + "-" + s2 + " réouverte !");
+                e.fermee = true;
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Rue " + s1 + " - " + s2 + " fermée."
+                );
                 return;
             }
+
         }
 
         JOptionPane.showMessageDialog(this, "Rue introuvable.");
@@ -214,7 +221,7 @@ public class ModificationsCirculation extends JFrame {
                     .append(" | ")
                     .append(e.distance).append(" m")
                     .append(" | Sens : ").append(e.sens)
-                    .append(" | ").append(e.ouverte ? "OUVERTE" : "FERMEE")
+                    .append(" | ").append(" | ").append(!e.fermee ? "OUVERTE" : "FERMEE")
                     .append("\n");
         }
 
