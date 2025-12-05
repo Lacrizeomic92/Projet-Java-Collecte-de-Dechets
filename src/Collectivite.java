@@ -5,56 +5,71 @@ import java.awt.event.KeyEvent;
 
 public class Collectivite extends JFrame {
 
+    // Graphes partagés (une seule instance pour tout le programme)
+    private static Graphe graphePlanGlobal;          // Graphe simplifié (A, B, C…)
+    private static Graphe grapheCirculationGlobal;   // Graphe réel (Sxxxxxx)
+
+    private Graphe graphePlan;
+    private Graphe grapheCirculation;
+
     public Collectivite() {
 
-        // Titre de la fenêtre
+        if (graphePlanGlobal == null) {
+            graphePlanGlobal = GrapheLoader.chargerDepuisFichier("nice_graphe_collectivite.txt");
+        }
+        if (grapheCirculationGlobal == null) {
+            grapheCirculationGlobal = GrapheLoaderCirculation.charger("nice_arcs_orientes_complets.txt");
+        }
+
+        // Références locales vers les graphes partagés
+        this.graphePlan = graphePlanGlobal;
+        this.grapheCirculation = grapheCirculationGlobal;
+
         setTitle("Menu - Collectivité");
         setSize(1000, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Chargement de l'image (mettre ton image dans src/)
         ImageIcon icon = new ImageIcon("src/collectivite.png");
-
-        // Redimensionnement de l'image
-        Image scaledImage = icon.getImage().getScaledInstance(950, 550, Image.SCALE_SMOOTH);
-        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+        Image scaled = icon.getImage().getScaledInstance(950, 550, Image.SCALE_SMOOTH);
+        JLabel imageLabel = new JLabel(new ImageIcon(scaled));
 
         imageLabel.setHorizontalAlignment(JLabel.CENTER);
         imageLabel.setVerticalAlignment(JLabel.CENTER);
-
-        // Permettre de recevoir les touches
         imageLabel.setFocusable(true);
 
-        // ⌨️ KEYLISTENER POUR LES TOUCHES
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
 
-                // ----------- OPTION 1 : SOUMETTRE PLAN DE LA COMMUNE -----------
-                if (e.getKeyCode() == KeyEvent.VK_1) {
-                    Graphe g = GrapheLoader.chargerDepuisFichier("nice_graphe_collectivite.txt");
-                    new AfficherGraphe(g);  // Ouvre la fenêtre d’affichage du graphe
+                int code = e.getKeyCode();
+
+                // 1 : Soumettre le plan de la commune
+                if (code == KeyEvent.VK_1) {
+                    new AfficherGraphe(graphePlan);
                 }
 
-                // ----------- OPTION ESCAPE : RETOUR -----------
-                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                    dispose();
-                    new Utilisateur(); // Retour au menu utilisateur
+                // 2 : Signaler les modifications de circulation
+                else if (code == KeyEvent.VK_2) {
+                    new ModificationsCirculation(grapheCirculation);
                 }
-                if (e.getKeyCode() == KeyEvent.VK_0) {
+
+                // 3 : Consulter les quantités de déchets récoltés (NOUVEAU)
+                else if (code == KeyEvent.VK_3) {
+                    new FenetreQuantitesDechets();   // ← nouvelle fenêtre que je t’ai fournie
+                }
+
+                // Espace ou Échap : retour à la page Utilisateur
+                else if (code == KeyEvent.VK_SPACE || code == KeyEvent.VK_ESCAPE) {
                     dispose();
-                    new Utilisateur(); // Retour au menu utilisateur
+                    new Utilisateur();
                 }
             }
         });
 
         add(imageLabel, BorderLayout.CENTER);
-
-        // On force le focus sur l'image pour capter les touches
-        SwingUtilities.invokeLater(() -> imageLabel.requestFocusInWindow());
-
+        SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
         setVisible(true);
     }
 }
