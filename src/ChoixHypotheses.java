@@ -57,10 +57,6 @@ public class ChoixHypotheses extends JFrame {
                     dispose();
                     new Accueil();
                 }
-                if (e.getKeyCode() == KeyEvent.VK_0) {
-                    dispose();
-                    new Utilisateur();
-                }
             }
         });
 
