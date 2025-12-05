@@ -5,26 +5,32 @@ import java.awt.event.KeyEvent;
 
 public class Collectivite extends JFrame {
 
-    // Graphes partagés (une seule instance pour tout le programme)
-    private static Graphe graphePlanGlobal;          // Graphe simplifié (A, B, C…)
-    private static Graphe grapheCirculationGlobal;   // Graphe réel (Sxxxxxx)
+    // === GRAPHES PARTAGÉS PAR TOUT LE PROGRAMME ===
+    private static Graphe graphePlanGlobal;          // Graphe simple (A, B, C…)
+    private static Graphe grapheCirculationGlobal;   // Graphe complet (Sxxxx)
 
-    private Graphe graphePlan;
-    private Graphe grapheCirculation;
+    // === GETTERS STATIQUES POUR Y ACCÉDER PARTOUT ===
+    public static Graphe getGrapheCirculation() {
+        return grapheCirculationGlobal;
+    }
 
+    public static Graphe getGraphePlan() {
+        return graphePlanGlobal;
+    }
+
+    // === CONSTRUCTEUR ===
     public Collectivite() {
 
+        // --- Chargement unique ---
         if (graphePlanGlobal == null) {
             graphePlanGlobal = GrapheLoader.chargerDepuisFichier("nice_graphe_collectivite.txt");
         }
+
         if (grapheCirculationGlobal == null) {
             grapheCirculationGlobal = GrapheLoaderCirculation.charger("nice_arcs_orientes_complets.txt");
         }
 
-        // Références locales vers les graphes partagés
-        this.graphePlan = graphePlanGlobal;
-        this.grapheCirculation = grapheCirculationGlobal;
-
+        // --- Interface ---
         setTitle("Menu - Collectivité");
         setSize(1000, 600);
         setLocationRelativeTo(null);
@@ -39,31 +45,30 @@ public class Collectivite extends JFrame {
         imageLabel.setVerticalAlignment(JLabel.CENTER);
         imageLabel.setFocusable(true);
 
+        // --- Gestion des touches ---
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
 
-                int code = e.getKeyCode();
+                switch (e.getKeyCode()) {
 
-                // 1 : Soumettre le plan de la commune
-                if (code == KeyEvent.VK_1) {
-                    new AfficherGraphe(graphePlan);
-                }
+                    case KeyEvent.VK_1:
+                        new AfficherGraphe(graphePlanGlobal);
+                        break;
 
-                // 2 : Signaler les modifications de circulation
-                else if (code == KeyEvent.VK_2) {
-                    new ModificationsCirculation(grapheCirculation);
-                }
+                    case KeyEvent.VK_2:
+                        new ModificationsCirculation(grapheCirculationGlobal);
+                        break;
 
-                // 3 : Consulter les quantités de déchets récoltés (NOUVEAU)
-                else if (code == KeyEvent.VK_3) {
-                    new FenetreQuantitesDechets();   // ← nouvelle fenêtre que je t’ai fournie
-                }
+                    case KeyEvent.VK_3:
+                        new FenetreQuantitesDechets();
+                        break;
 
-                // Espace ou Échap : retour à la page Utilisateur
-                else if (code == KeyEvent.VK_SPACE || code == KeyEvent.VK_ESCAPE) {
-                    dispose();
-                    new Utilisateur();
+                    case KeyEvent.VK_SPACE:
+                    case KeyEvent.VK_ESCAPE:
+                        dispose();
+                        new Utilisateur();
+                        break;
                 }
             }
         });
