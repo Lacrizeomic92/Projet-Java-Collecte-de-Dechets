@@ -83,10 +83,6 @@ public class MenuPrincipal extends JFrame {
                     dispose();
                     new ChoixHypotheses();
                 }
-                if (e.getKeyCode() == KeyEvent.VK_0) {
-                    dispose();
-                    new ChoixHypotheses();
-                }
             }
         });
 
