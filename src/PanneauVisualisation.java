@@ -53,7 +53,7 @@ public class PanneauVisualisation extends JPanel {
         for (NoeudSecteur secteur : grapheSecteurs.noeuds) {
             int x = secteur.x;
             int y = secteur.y;
-          
+
             int couleurIndex = secteur.couleur % couleursJours.length;
             g2.setColor(couleursJours[couleurIndex]);
             g2.fillOval(x - 30, y - 30, 60, 60);
