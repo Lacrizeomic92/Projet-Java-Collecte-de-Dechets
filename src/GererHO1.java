@@ -22,8 +22,11 @@ public class GererHO1 {
 
             switch (choix) {
                 case 1:
-                    System.out.println("\n=== ITINÉRAIRE ENTRE 2 INTERSECTIONS (HO1) ===");
-                    demanderItineraireDeuxPoints();
+                    System.out.println("\n=== CAS 1 : GRAPH PAIR ===");
+
+                    // 👉 1. Affichage du cycle eulérien dans la console
+                    EulerienCas1.executerCas1();
+
                     break;
                 case 2:
                     System.out.println("\n=== TOURNÉE MULTIPOINTS (HO1) ===");
@@ -32,6 +35,7 @@ public class GererHO1 {
                 case 3:
                     retour = true;
                     break;
+
                 default:
                     System.out.println("Choix invalide.");
             }
