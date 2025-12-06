@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class GrapheLoaderCirculation {
@@ -8,10 +9,14 @@ public class GrapheLoaderCirculation {
 
         Graphe g = new Graphe();
 
+        // Pour éviter d'ajouter plusieurs fois le même node
+        HashSet<String> noeudsDejaAjoutes = new HashSet<>();
+
+        // Pour détecter les sens uniques
         HashSet<String> edgesSet = new HashSet<>();
 
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(fichier));
+        try (BufferedReader br = new BufferedReader(new FileReader(fichier))) {
+
             String ligne;
 
             while ((ligne = br.readLine()) != null) {
@@ -19,35 +24,50 @@ public class GrapheLoaderCirculation {
                 if (ligne.trim().isEmpty()) continue;
 
                 String[] parts = ligne.split(";");
+
                 if (parts.length < 4) continue;
 
                 String from = parts[0].trim().replace("$", "");
                 String to   = parts[1].trim().replace("$", "");
-                int distance = (int) Double.parseDouble(parts[2].trim());
+                int distance = (int) Double.parseDouble(parts[2].trim().replace(",", "."));
+                String nomRue = parts[3].trim();
 
-                g.nodes.add(new Graphe.Node(from, from));
-                g.nodes.add(new Graphe.Node(to, to));
+                // --------------------------------------------
+                // 🔥 Ajouter les nodes UNE SEULE FOIS
+                // --------------------------------------------
+                if (!noeudsDejaAjoutes.contains(from)) {
+                    g.nodes.add(new Graphe.Node(from, from));
+                    noeudsDejaAjoutes.add(from);
+                }
+                if (!noeudsDejaAjoutes.contains(to)) {
+                    g.nodes.add(new Graphe.Node(to, to));
+                    noeudsDejaAjoutes.add(to);
+                }
 
-                // ajoute edge en DOUBLE SENS pour l'instant
-                g.edges.add(new Graphe.Edge(from, to, distance, "TWO_WAY"));
+                // --------------------------------------------
+                // 🔥 Ajouter l'arête (TWO_WAY par défaut)
+                // --------------------------------------------
+                g.edges.add(new Graphe.Edge(from, to, distance, "TWO_WAY", nomRue));
 
-                // stocker une signature
+                // --------------------------------------------
+                // Stocker la signature pour détecter ONE_WAY
+                // --------------------------------------------
                 edgesSet.add(from + "->" + to);
             }
-
-            br.close();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // -------- DÉTECTION DES SENS UNIQUES --------
+        // --------------------------------------------
+        // 🔥 Détection des sens uniques
+        // --------------------------------------------
         for (Graphe.Edge e : g.edges) {
 
             String inverse = e.to + "->" + e.from;
 
             if (!edgesSet.contains(inverse)) {
-                // sens unique
+                // Sens unique automatiquement détecté
                 e.sens = "ONE_WAY";
             }
         }
