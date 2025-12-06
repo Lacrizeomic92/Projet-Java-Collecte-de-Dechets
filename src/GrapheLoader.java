@@ -37,10 +37,13 @@ public class GrapheLoader {
                 if (lectureEdges) {
                     String[] parts = ligne.split(" ");
                     graphe.edges.add(new Graphe.Edge(
-                            parts[0], parts[1],
+                            parts[0],
+                            parts[1],
                             Integer.parseInt(parts[2]),
-                            parts[3]
+                            parts[3],        // sens
+                            "Rue_" + parts[0] + "_" + parts[1]   // nomRue par défaut
                     ));
+
                 }
             }
 
