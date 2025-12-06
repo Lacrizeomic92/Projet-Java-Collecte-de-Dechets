@@ -16,19 +16,21 @@ public class Graphe {
         public int distance;
         public String sens;
 
-        // 🔥 NOUVEAU : état de la rue
-        // true  = rue fermée à la circulation
-        // false = rue ouverte (par défaut)
         public boolean fermee;
 
-        public Edge(String from, String to, int distance, String sens) {
+        // 🔥 Nouveau champ : NOM DE LA RUE
+        public String nomRue;
+
+        public Edge(String from, String to, int distance, String sens, String nomRue) {
             this.from = from;
             this.to = to;
             this.distance = distance;
             this.sens = sens;
-            this.fermee = false;   // ✔ toutes les rues sont ouvertes par défaut
+            this.nomRue = nomRue;
+            this.fermee = false;
         }
     }
+
 
     public List<Node> nodes = new ArrayList<>();
     public List<Edge> edges = new ArrayList<>();
