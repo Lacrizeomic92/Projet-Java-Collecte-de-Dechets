@@ -13,6 +13,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.*;
 
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+
 public class ItineraireDeuxPoints extends JFrame {
 
     private JTextField departField;
@@ -24,7 +28,7 @@ public class ItineraireDeuxPoints extends JFrame {
 
     public ItineraireDeuxPoints() {
 
-        // Récupération du graphe global mis à jour
+        // Toujours récupérer la version mise à jour :
         this.grapheCirculation = Collectivite.getGrapheCirculation();
 
         setTitle("Itinéraire optimal entre deux intersections");
@@ -33,7 +37,7 @@ public class ItineraireDeuxPoints extends JFrame {
         setLocationRelativeTo(null);
 
         JPanel panel = new JPanel(null);
-        panel.setBackground(new Color(240, 255, 240)); // vert très clair
+        panel.setBackground(new Color(240, 255, 240));
         add(panel);
 
         JLabel titre = new JLabel("Itinéraire optimal entre deux intersections", SwingConstants.CENTER);
@@ -79,64 +83,76 @@ public class ItineraireDeuxPoints extends JFrame {
 
         JButton retour = new JButton("Retour");
         retour.setBounds(20, 520, 120, 30);
-        retour.addActionListener(e -> { dispose(); new Theme1(); });
+        retour.addActionListener(e -> {
+            dispose();
+            new Theme1();
+        });
         panel.add(retour);
 
         setVisible(true);
     }
 
-    // ==============================
-    //       ALGORITHME DIJKSTRA
-    // ==============================
+    // ===================================================================
+    //                       DIJKSTRA AVEC NOMS DE RUES
+    // ===================================================================
     private CheminResult dijkstra(String depart, String arrivee) {
 
-        Map<String, Map<String, Double>> adj = new HashMap<>();
-        Map<String, Map<String, String>> nomRue = new HashMap<>();
+        // adj : sommet -> (voisin -> distance)
+        Map<String, Map<String, Integer>> adj = new HashMap<>();
+        // rues : sommet -> (voisin -> nomRue)
+        Map<String, Map<String, String>> rues = new HashMap<>();
 
-        // Construire le graphe en mémoire
+        // 1) Ajouter tous les nœuds (même isolés)
+        for (Graphe.Node n : grapheCirculation.nodes) {
+            adj.putIfAbsent(n.id, new HashMap<>());
+            rues.putIfAbsent(n.id, new HashMap<>());
+        }
+
+        // 2) Ajouter seulement les arêtes OUVERTES
         for (Graphe.Edge e : grapheCirculation.edges) {
 
-            if (e.fermee) continue; // Rue fermée → ignorée
+            if (e.fermee) continue; // Rue fermée = ignorée
 
-            adj.putIfAbsent(e.from, new HashMap<>());
-            nomRue.putIfAbsent(e.from, new HashMap<>());
+            // Direction principale
+            adj.get(e.from).put(e.to, e.distance);
+            rues.get(e.from).put(e.to, e.nomRue != null ? e.nomRue : "(Rue inconnue)");
 
-            adj.get(e.from).put(e.to, (double) e.distance);
-            nomRue.get(e.from).put(e.to, e.sens);
-
+            // Retour si ce n'est pas ONE_WAY
             if (!"ONE_WAY".equalsIgnoreCase(e.sens)) {
-                adj.putIfAbsent(e.to, new HashMap<>());
-                nomRue.putIfAbsent(e.to, new HashMap<>());
-                adj.get(e.to).put(e.from, (double) e.distance);
-                nomRue.get(e.to).put(e.from, e.sens);
+                adj.get(e.to).put(e.from, e.distance);
+                rues.get(e.to).put(e.from, e.nomRue != null ? e.nomRue : "(Rue inconnue)");
             }
         }
 
-        if (!adj.containsKey(depart) || !adj.containsKey(arrivee)) return null;
+        // Vérifier que les intersections existent
+        if (!adj.containsKey(depart) || !adj.containsKey(arrivee)) {
+            return null;
+        }
 
-        Map<String, Double> dist = new HashMap<>();
+        // 3) Dijkstra classique
+        Map<String, Integer> dist = new HashMap<>();
         Map<String, String> prec = new HashMap<>();
 
-        for (String s : adj.keySet())
-            dist.put(s, Double.POSITIVE_INFINITY);
-
-        dist.put(depart, 0.0);
+        for (String s : adj.keySet()) {
+            dist.put(s, Integer.MAX_VALUE);
+        }
+        dist.put(depart, 0);
 
         PriorityQueue<String> pq =
-                new PriorityQueue<>(Comparator.comparingDouble(dist::get));
-
+                new PriorityQueue<>(Comparator.comparingInt(dist::get));
         pq.add(depart);
 
         while (!pq.isEmpty()) {
-            String cur = pq.poll();
 
+            String cur = pq.poll();
             if (cur.equals(arrivee)) break;
 
             for (var entry : adj.get(cur).entrySet()) {
-                String voisin = entry.getKey();
-                double poids = entry.getValue();
 
-                double newDist = dist.get(cur) + poids;
+                String voisin = entry.getKey();
+                int poids = entry.getValue();
+
+                int newDist = dist.get(cur) + poids;
 
                 if (newDist < dist.get(voisin)) {
                     dist.put(voisin, newDist);
@@ -146,35 +162,56 @@ public class ItineraireDeuxPoints extends JFrame {
             }
         }
 
-        if (dist.get(arrivee) == Double.POSITIVE_INFINITY) return null;
+        if (dist.get(arrivee) == Integer.MAX_VALUE) {
+            return null; // aucun chemin possible
+        }
 
-        List<String> rues = new ArrayList<>();
+        // 4) Reconstruction : on récupère les NOMS des rues, pas les sommets
+        List<String> nomsRues = new ArrayList<>();
         String cur = arrivee;
 
         while (prec.containsKey(cur)) {
             String p = prec.get(cur);
-            rues.add(0, p + " → " + cur);
+            String rue = rues.get(p).get(cur);
+            if (rue == null) rue = "(Rue inconnue)";
+            nomsRues.add(0, rue);
             cur = p;
         }
 
-        return new CheminResult(rues, dist.get(arrivee));
+        // Optionnel : supprimer les doublons successifs de rues
+        nomsRues = supprimerDoublonsConsecutifs(nomsRues);
+
+        return new CheminResult(nomsRues, dist.get(arrivee));
     }
 
-    // Structure résultat
+    private List<String> supprimerDoublonsConsecutifs(List<String> liste) {
+        List<String> out = new ArrayList<>();
+        String prev = null;
+        for (String r : liste) {
+            if (!r.equals(prev)) {
+                out.add(r);
+            }
+            prev = r;
+        }
+        return out;
+    }
+
+    // Structure du résultat
     private static class CheminResult {
         List<String> rues;
-        double distance;
+        int distance;
 
-        CheminResult(List<String> rues, double distance) {
+        CheminResult(List<String> rues, int distance) {
             this.rues = rues;
             this.distance = distance;
         }
     }
 
-    // ==============================
-    //         ACTION BOUTON
-    // ==============================
+    // ===================================================================
+    //                   ACTION DU BOUTON CALCULER
+    // ===================================================================
     private void calculer(ActionEvent e) {
+
         String dep = departField.getText().trim();
         String arr = arriveeField.getText().trim();
 
@@ -186,12 +223,14 @@ public class ItineraireDeuxPoints extends JFrame {
         CheminResult res = dijkstra(dep, arr);
 
         if (res == null) {
-            resultatArea.setText("Aucun chemin trouvé (peut-être à cause d’une rue fermée).");
+            resultatArea.setText("Aucun chemin trouvé (rue fermée ou sens unique bloquant).");
         } else {
             resultatArea.setText(
-                    "Rues traversées :\n" + String.join("\n", res.rues) +
-                            "\n\nDistance totale : " + String.format("%.2f", res.distance) + " m"
+                    "Rues traversées :\n" +
+                            String.join(" → ", res.rues) +
+                            "\n\nDistance totale : " + res.distance + " m"
             );
         }
     }
 }
+
