@@ -16,9 +16,9 @@ public class Theme2 extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // ---------------------------------------
-        // CHARGEMENT IMAGE / LABEL (PAS DE FOCUS)
-        // ---------------------------------------
+        // -------------------------------------------------------
+        // CHARGEMENT IMAGE DE FOND
+        // -------------------------------------------------------
         JLabel label;
         URL imgUrl = Theme2.class.getResource("/Theme2.png");
         ImageIcon icon = (imgUrl != null ? new ImageIcon(imgUrl) : null);
@@ -31,12 +31,12 @@ public class Theme2 extends JFrame {
             label.setFont(new Font("Arial", Font.BOLD, 40));
         }
 
-        label.setFocusable(false); // IMPORTANT !!!
+        label.setFocusable(false);
         setContentPane(label);
 
-        // ---------------------------------------
-        //        KEY LISTENER SUR LA FENETRE
-        // ---------------------------------------
+        // -------------------------------------------------------
+        // KEY LISTENER
+        // -------------------------------------------------------
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -57,10 +57,6 @@ public class Theme2 extends JFrame {
                             break;
 
                         case KeyEvent.VK_ESCAPE:
-                            dispose();
-                            new MenuPrincipal(1);
-                            break;
-
                         case KeyEvent.VK_0:
                             dispose();
                             new MenuPrincipal(1);
@@ -73,25 +69,22 @@ public class Theme2 extends JFrame {
             }
         });
 
-        // ---------------------------------------
-        // DONNER LE FOCUS AU FRAME, PAS AU LABEL
-        // ---------------------------------------
         setFocusable(true);
         SwingUtilities.invokeLater(this::requestFocusInWindow);
 
         setVisible(true);
     }
 
-    // ----------------------------------------------------
-    //      FENÊTRE SCROLLABLE POUR AFFICHAGE DES RÉSULTATS
-    // ----------------------------------------------------
+    // -------------------------------------------------------
+    // FENÊTRE D'AFFICHAGE DES RÉSULTATS
+    // -------------------------------------------------------
     private void afficherResultat(String titre, String contenu) {
 
         JTextArea area = new JTextArea(contenu);
         area.setEditable(false);
         area.setFont(new Font("Monospaced", Font.PLAIN, 14));
-        area.setLineWrap(false);        // Pas de wrap vertical
-        area.setWrapStyleWord(false);   // Pas de wrap horizontal
+        area.setLineWrap(false);
+        area.setWrapStyleWord(false);
 
         JScrollPane scroll = new JScrollPane(area);
         scroll.setPreferredSize(new Dimension(800, 500));
@@ -104,20 +97,41 @@ public class Theme2 extends JFrame {
         frame.setVisible(true);
     }
 
-    // ----------------------------------------------------
-//                 APPROCHE PPV (CORRIGÉE)
-// ----------------------------------------------------
+    // -------------------------------------------------------
+    //    CHOIX DYNAMIQUE DU DÉPÔT
+    // -------------------------------------------------------
+    private Depot demanderDepot() {
+
+        String id = JOptionPane.showInputDialog(
+                this,
+                "Entrez l’ID du dépôt (ex : S273941) :",
+                "Choix du dépôt",
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (id == null || id.isBlank()) {
+            JOptionPane.showMessageDialog(this, "ID invalide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+
+        // aucun nom, pas de contenance
+        return new Depot(id.trim());
+    }
+
+    // -------------------------------------------------------
+    //                     PPV
+    // -------------------------------------------------------
     private void executerPPV() throws Exception {
 
-        Depot depot = ChargeurPointsCollecte.chargerDepot("points_collecte_nice.txt");
+        Depot depot = demanderDepot();
+        if (depot == null) return;
+
         List<PointCollecte> points = ChargeurPointsCollecte.chargerPoints("points_collecte_nice.txt");
 
-        // Le nouveau PPV renvoie maintenant un objet résultat
         PlusProcheVoisin.ResultatPPV resultat = PlusProcheVoisin.calculer(depot, points);
 
         afficherResultat("Résultat PPV", formatPPV(resultat, depot));
     }
-
 
     private String formatPPV(PlusProcheVoisin.ResultatPPV resultat, Depot depot) {
 
@@ -160,27 +174,24 @@ public class Theme2 extends JFrame {
         return sb.toString();
     }
 
-
-    // ----------------------------------------------------
-    //                 APPROCHE MST
-    // ----------------------------------------------------
+    // -------------------------------------------------------
+    //                     MST + DFS + SHORTCUT
+    // -------------------------------------------------------
     private void executerMST() throws Exception {
 
-        Depot depot = ChargeurPointsCollecte.chargerDepot("points_collecte_nice.txt");
+        Depot depot = demanderDepot();
+        if (depot == null) return;
+
         List<PointCollecte> points = ChargeurPointsCollecte.chargerPoints("points_collecte_nice.txt");
 
         MSTPrimResult mst = MSTPrim.construire(points, depot);
 
-        // 1) DFS sur le MST
         List<Integer> parcours = ParcoursPrefixe.dfs(mst.parent);
 
-        // 2) Shortcutting
         List<Integer> ordre = Shortcutting.appliquer(parcours);
 
-        // 3) Formatage du résultat (avec distances + rues)
         afficherResultat("Résultat MST", formatMST(ordre, points, depot, mst.ids));
     }
-
 
     private String formatMST(List<Integer> ordre,
                              List<PointCollecte> points,
@@ -194,7 +205,6 @@ public class Theme2 extends JFrame {
         double distanceTotale = 0.0;
         String courant = depot.getSommetId();
 
-        // Parcours des points dans l'ordre MST
         for (int idx : ordre) {
 
             if (idx == 0) continue;
@@ -208,7 +218,6 @@ public class Theme2 extends JFrame {
 
             if (pc == null) continue;
 
-            // ---------- CORRECTION : TRY/CATCH SUR LE DIJKSTRA ----------
             DijkstraNice.CheminResult res;
             try {
                 res = DijkstraNice.dijkstra(courant, idPoint);
@@ -233,7 +242,7 @@ public class Theme2 extends JFrame {
             courant = idPoint;
         }
 
-        // ---------- RETOUR AU DÉPÔT ----------
+        // RETOUR AU DEPOT
         try {
             DijkstraNice.CheminResult retour = DijkstraNice.dijkstra(courant, depot.getSommetId());
 
@@ -264,7 +273,6 @@ public class Theme2 extends JFrame {
 
         return sb.toString();
     }
-
 
     private String decouperTournees(List<Integer> ordre,
                                     List<PointCollecte> points,
