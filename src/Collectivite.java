@@ -5,32 +5,65 @@ import java.awt.event.KeyEvent;
 
 public class Collectivite extends JFrame {
 
-    // === GRAPHES PARTAGÉS PAR TOUT LE PROGRAMME ===
-    private static Graphe graphePlanGlobal;          // Graphe simple (A, B, C…)
-    private static Graphe grapheCirculationGlobal;   // Graphe complet (Sxxxx)
+    // ================================
+    // 🔥 GRAPHES GLOBAUX PARTAGÉS
+    // ================================
+    private static Graphe graphePlanGlobal = null;          // Plan simplifié (A, B, C…)
+    private static Graphe grapheCirculationGlobal = null;   // Graphe réel circulation
 
-    // === GETTERS STATIQUES POUR Y ACCÉDER PARTOUT ===
+    private Graphe graphePlan;
+    private Graphe grapheCirculation;
+
+    // =========================================================
+    // 🔥 ACCÈS GLOBAL AU GRAPHE CIRCULATION (avec auto-chargement)
+    // =========================================================
     public static Graphe getGrapheCirculation() {
+
+        // 🔥 Très important : garantir un graphe valide même si
+        // la mairie n'a jamais été ouverte.
+        if (grapheCirculationGlobal == null) {
+            grapheCirculationGlobal =
+                    GrapheLoaderCirculation.charger("nice_arcs_orientes_complets.txt");
+        }
+
         return grapheCirculationGlobal;
     }
 
+    // =========================================================
+    // 🔥 ACCÈS GLOBAL AU GRAPHE PLAN (optionnel)
+    // =========================================================
     public static Graphe getGraphePlan() {
+
+        if (graphePlanGlobal == null) {
+            graphePlanGlobal =
+                    GrapheLoader.chargerDepuisFichier("nice_graphe_collectivite.txt");
+        }
+
         return graphePlanGlobal;
     }
 
-    // === CONSTRUCTEUR ===
+    // =========================================================
+    // 🔥 CONSTRUCTEUR : INTERFACE COLLECTIVITÉ
+    // =========================================================
     public Collectivite() {
 
-        // --- Chargement unique ---
+        // Chargement automatique au cas où
         if (graphePlanGlobal == null) {
-            graphePlanGlobal = GrapheLoader.chargerDepuisFichier("nice_graphe_collectivite.txt");
+            graphePlanGlobal =
+                    GrapheLoader.chargerDepuisFichier("nice_graphe_collectivite.txt");
         }
-
         if (grapheCirculationGlobal == null) {
-            grapheCirculationGlobal = GrapheLoaderCirculation.charger("nice_arcs_orientes_complets.txt");
+            grapheCirculationGlobal =
+                    GrapheLoaderCirculation.charger("nice_arcs_orientes_complets.txt");
         }
 
-        // --- Interface ---
+        // Références locales
+        this.graphePlan = graphePlanGlobal;
+        this.grapheCirculation = grapheCirculationGlobal;
+
+        // -----------------------------------------------------
+        // 🔥 INTERFACE GRAPHIQUE
+        // -----------------------------------------------------
         setTitle("Menu - Collectivité");
         setSize(1000, 600);
         setLocationRelativeTo(null);
@@ -45,30 +78,34 @@ public class Collectivite extends JFrame {
         imageLabel.setVerticalAlignment(JLabel.CENTER);
         imageLabel.setFocusable(true);
 
-        // --- Gestion des touches ---
+        // -----------------------------------------------------
+        // 🔥 GESTION DES TOUCHES
+        // -----------------------------------------------------
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
 
-                switch (e.getKeyCode()) {
+                // 1 : Afficher plan simplifié
+                if (e.getKeyCode() == KeyEvent.VK_1) {
+                    new AfficherGraphe(graphePlan);
+                }
 
-                    case KeyEvent.VK_1:
-                        new AfficherGraphe(graphePlanGlobal);
-                        break;
+                // 2 : Modifications circulation
+                if (e.getKeyCode() == KeyEvent.VK_2) {
+                    new ModificationsCirculation(grapheCirculation);
+                }
 
-                    case KeyEvent.VK_2:
-                        new ModificationsCirculation(grapheCirculationGlobal);
-                        break;
+                // 3 : Voir quantités (si tu l'ajoutes plus tard)
+                if (e.getKeyCode() == KeyEvent.VK_3) {
+                    // exemple : new QuantitesDechets()
+                }
 
-                    case KeyEvent.VK_3:
-                        new FenetreQuantitesDechets();
-                        break;
+                // Retour utilisateur
+                if (e.getKeyCode() == KeyEvent.VK_SPACE ||
+                        e.getKeyCode() == KeyEvent.VK_ESCAPE) {
 
-                    case KeyEvent.VK_SPACE:
-                    case KeyEvent.VK_ESCAPE:
-                        dispose();
-                        new Utilisateur();
-                        break;
+                    dispose();
+                    new Utilisateur();
                 }
             }
         });
