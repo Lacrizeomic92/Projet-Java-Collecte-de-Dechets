@@ -19,8 +19,6 @@ public class Collectivite extends JFrame {
     // =========================================================
     public static Graphe getGrapheCirculation() {
 
-        // 🔥 Très important : garantir un graphe valide même si
-        // la mairie n'a jamais été ouverte.
         if (grapheCirculationGlobal == null) {
             grapheCirculationGlobal =
                     GrapheLoaderCirculation.charger("nice_arcs_orientes_complets.txt");
@@ -57,7 +55,6 @@ public class Collectivite extends JFrame {
                     GrapheLoaderCirculation.charger("nice_arcs_orientes_complets.txt");
         }
 
-        // Références locales
         this.graphePlan = graphePlanGlobal;
         this.grapheCirculation = grapheCirculationGlobal;
 
@@ -85,22 +82,24 @@ public class Collectivite extends JFrame {
             @Override
             public void keyPressed(KeyEvent e) {
 
-                // 1 : Afficher plan simplifié
+                // -------------------------------------------------
+                // 1️⃣ : Soumettre / afficher le plan de la commune
+                // -------------------------------------------------
                 if (e.getKeyCode() == KeyEvent.VK_1) {
-                    new AfficherGraphe(graphePlan);
+                    new AfficherPlanCommune();  // 🔥 Fenêtre PNG
                 }
 
-                // 2 : Modifications circulation
+                // 2️⃣ : Modifications circulation (travaux)
                 if (e.getKeyCode() == KeyEvent.VK_2) {
                     new ModificationsCirculation(grapheCirculation);
                 }
 
-                // 3 : Voir quantités (si tu l'ajoutes plus tard)
+                // 3️⃣ : Voir quantités (si tu ajoutes plus tard)
                 if (e.getKeyCode() == KeyEvent.VK_3) {
                     // exemple : new QuantitesDechets()
                 }
 
-                // Retour utilisateur
+                // Retour au menu utilisateur
                 if (e.getKeyCode() == KeyEvent.VK_SPACE ||
                         e.getKeyCode() == KeyEvent.VK_ESCAPE) {
 
