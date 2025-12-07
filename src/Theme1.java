@@ -13,7 +13,6 @@ public class Theme1 extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // === CHARGEMENT DE L’IMAGE Theme1.png ===
         URL imgUrl = Theme1.class.getResource("/Theme1.png");
 
         if (imgUrl == null) {
@@ -32,9 +31,6 @@ public class Theme1 extends JFrame {
         imageLabel.setFocusable(true);
         setContentPane(imageLabel);
 
-        // =============================
-        //     GESTION DU CLAVIER
-        // =============================
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -43,17 +39,17 @@ public class Theme1 extends JFrame {
 
                     case KeyEvent.VK_1:
                         dispose();
-                        new ItineraireDeuxPoints();      // HO1 : itinéraire entre 2 intersections
+                        new ItineraireDeuxPoints();
                         break;
 
                     case KeyEvent.VK_2:
                         dispose();
-                        new ItineraireMultiPoints();     // HO1 : tournée multipoints
+                        new ItineraireMultiPoints();
                         break;
 
                     case KeyEvent.VK_ESCAPE:
                         dispose();
-                        new MenuPrincipal(1);            // Retour au menu avec HO1
+                        new MenuPrincipal(1);
                         break;
                 }
             }
