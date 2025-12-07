@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.net.URL;
+import java.io.File;
 
 public class Theme3 extends JFrame {
 
@@ -44,45 +45,79 @@ public class Theme3 extends JFrame {
 
                 switch (e.getKeyCode()) {
 
+                    // ===============================
+                    // OPTION 1 -> AFFICHER PNG
+                    // ===============================
                     case KeyEvent.VK_1:
-                        // Option 1 : Lancer GestionnaireCollecte
                         dispose();
+
                         try {
-                            new GestionnaireCollecte().demarrer();
+                            JFrame f = new JFrame("Division de la commune – HO1");
+                            f.setSize(1200, 800);
+                            f.setLocationRelativeTo(null);
+                            f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+                            // Charger le PNG depuis /src/
+                            File pngFile = new File("src/division_commune.png");
+
+                            if (!pngFile.exists()) {
+                                JOptionPane.showMessageDialog(null,
+                                        "Le fichier division_commune.png est introuvable.\n" +
+                                                "Place-le dans le dossier /src/",
+                                        "Erreur",
+                                        JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+
+                            // Charger et REDIMENSIONNER l'image
+                            ImageIcon rawIcon = new ImageIcon(pngFile.getAbsolutePath());
+                            Image rawImg = rawIcon.getImage();
+
+                            // Taille cible pour bien remplir la fenêtre
+                            int targetWidth = 1100;
+                            int targetHeight = 700;
+
+                            Image scaledImg = rawImg.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+                            ImageIcon scaledIconImg = new ImageIcon(scaledImg);
+
+                            // Affichage
+                            JLabel lab = new JLabel(scaledIconImg);
+                            lab.setHorizontalAlignment(SwingConstants.CENTER);
+
+                            JScrollPane scroll = new JScrollPane(lab);
+                            scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                            scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+                            f.add(scroll);
+                            f.setVisible(true);
+
                         } catch (Exception ex) {
                             JOptionPane.showMessageDialog(null,
-                                    "Erreur lors du démarrage du gestionnaire:\n" + ex.getMessage(),
+                                    "Erreur lors de l'affichage de l'image:\n" + ex.getMessage(),
                                     "Erreur",
                                     JOptionPane.ERROR_MESSAGE);
                         }
                         break;
 
+                    // OPTION 2
                     case KeyEvent.VK_2:
-                        // Option 2 : Vous pourrez ajouter une autre fonctionnalité ici plus tard
                         JOptionPane.showMessageDialog(null,
-                                "Option 2 - À implémenter\n" +
-                                        "Ex: Optimisation des tournées",
+                                "Option 2 - À implémenter",
                                 "Information",
                                 JOptionPane.INFORMATION_MESSAGE);
                         break;
 
+                    // OPTION 3
                     case KeyEvent.VK_3:
-                        // Option 3 : Vous pourrez ajouter une autre fonctionnalité ici plus tard
                         JOptionPane.showMessageDialog(null,
-                                "Option 3 - À implémenter\n" +
-                                        "Ex: Suivi en temps réel",
+                                "Option 3 - À implémenter",
                                 "Information",
                                 JOptionPane.INFORMATION_MESSAGE);
                         break;
 
-                    // RETOUR AU MENU PRINCIPAL
+                    // ===== RETOUR =====
                     case KeyEvent.VK_ESCAPE:
                     case KeyEvent.VK_BACK_SPACE:
-                        dispose();
-                        new ChoixHypotheses();
-                        break;
-
-                    // ALTERNATIVE POUR RETOUR
                     case KeyEvent.VK_SPACE:
                         dispose();
                         new ChoixHypotheses();
