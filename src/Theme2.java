@@ -16,9 +16,6 @@ public class Theme2 extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // -------------------------------------------------------
-        // CHARGEMENT IMAGE DE FOND
-        // -------------------------------------------------------
         JLabel label;
         URL imgUrl = Theme2.class.getResource("/Theme2.png");
         ImageIcon icon = (imgUrl != null ? new ImageIcon(imgUrl) : null);
@@ -34,9 +31,6 @@ public class Theme2 extends JFrame {
         label.setFocusable(false);
         setContentPane(label);
 
-        // -------------------------------------------------------
-        // KEY LISTENER
-        // -------------------------------------------------------
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -75,9 +69,6 @@ public class Theme2 extends JFrame {
         setVisible(true);
     }
 
-    // -------------------------------------------------------
-    // FENÊTRE D'AFFICHAGE DES RÉSULTATS
-    // -------------------------------------------------------
     private void afficherResultat(String titre, String contenu) {
 
         JTextArea area = new JTextArea(contenu);
@@ -97,9 +88,6 @@ public class Theme2 extends JFrame {
         frame.setVisible(true);
     }
 
-    // -------------------------------------------------------
-    //    CHOIX DYNAMIQUE DU DÉPÔT
-    // -------------------------------------------------------
     private Depot demanderDepot() {
 
         String id = JOptionPane.showInputDialog(
@@ -117,10 +105,6 @@ public class Theme2 extends JFrame {
         // aucun nom, pas de contenance
         return new Depot(id.trim());
     }
-
-    // -------------------------------------------------------
-    //                     PPV
-    // -------------------------------------------------------
     private void executerPPV() throws Exception {
 
         Depot depot = demanderDepot();
@@ -174,9 +158,6 @@ public class Theme2 extends JFrame {
         return sb.toString();
     }
 
-    // -------------------------------------------------------
-    //                     MST + DFS + SHORTCUT
-    // -------------------------------------------------------
     private void executerMST() throws Exception {
 
         Depot depot = demanderDepot();
@@ -242,7 +223,6 @@ public class Theme2 extends JFrame {
             courant = idPoint;
         }
 
-        // RETOUR AU DEPOT
         try {
             DijkstraNice.CheminResult retour = DijkstraNice.dijkstra(courant, depot.getSommetId());
 
