@@ -1,28 +1,33 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-public class PanneauVisualisation extends JPanel {
+public class PanneauVisualisationAvecCapacites extends JPanel {
     private final SecteurGraphe grapheSecteurs;
     private final SecteurGraphe original;
     private final HashMap<Integer, ArrayList<NoeudSecteur>> clusters;
+    private final HashMap<Integer, ArrayList<NoeudSecteur>> planning;
 
     private final Color[] couleursJours = {
-            Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW,
-            Color.ORANGE
+            new Color(255, 100, 100),    // Rouge
+            new Color(100, 100, 255),    // Bleu
+            new Color(100, 255, 100),    // Vert
+            new Color(255, 255, 100),    // Jaune
+            new Color(255, 150, 50),     // Orange
     };
 
-    public PanneauVisualisation(SecteurGraphe grapheSecteurs,
-                                SecteurGraphe original,
-                                HashMap<Integer, ArrayList<NoeudSecteur>> clusters) {
+    private static final int CAPACITE_MAX_PAR_JOUR = 30; // 15 × 2
+
+    public PanneauVisualisationAvecCapacites(SecteurGraphe grapheSecteurs,
+                                             SecteurGraphe original,
+                                             HashMap<Integer, ArrayList<NoeudSecteur>> clusters,
+                                             HashMap<Integer, ArrayList<NoeudSecteur>> planning) {
         this.grapheSecteurs = grapheSecteurs;
         this.original = original;
         this.clusters = clusters;
+        this.planning = planning;
         setBackground(Color.WHITE);
-        setPreferredSize(new Dimension(1200, 800));
+        setPreferredSize(new Dimension(1300, 850));
     }
 
     @Override
@@ -30,9 +35,12 @@ public class PanneauVisualisation extends JPanel {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
         dessinerAretes(g2);
         dessinerSecteurs(g2);
         dessinerLegende(g2);
+
+        dessinerPlanning(g2);
     }
 
     private void dessinerAretes(Graphics2D g2) {
@@ -63,53 +71,117 @@ public class PanneauVisualisation extends JPanel {
             g2.drawOval(x - 30, y - 30, 60, 60);
 
             g2.setFont(new Font("Arial", Font.BOLD, 14));
-            String nom = secteur.nom;
-            g2.drawString(nom, x - 20, y - 40);
+            g2.drawString(secteur.nom, x - 20, y - 40);
+
             g2.drawString("J" + (secteur.couleur + 1), x - 15, y + 50);
+
+            g2.setFont(new Font("Arial", Font.PLAIN, 12));
+            g2.drawString(secteur.quantiteDechets + "t", x - 10, y + 70);
         }
     }
 
     private void dessinerLegende(Graphics2D g2) {
-        Set<Integer> joursUtilises = new HashSet<>();
-        if (grapheSecteurs != null) {
-            for (NoeudSecteur s : grapheSecteurs.noeuds) {
-                joursUtilises.add(s.couleur);
-            }
-        }
 
         g2.setColor(new Color(255, 255, 255, 240));
-        g2.fillRect(20, 20, 300, 200);
+        g2.fillRect(20, 20, 320, 200);
         g2.setColor(Color.BLACK);
-        g2.drawRect(20, 20, 300, 200);
+        g2.drawRect(20, 20, 320, 200);
 
         g2.setFont(new Font("Arial", Font.BOLD, 16));
-        g2.drawString("LÉGENDE - PLANIFICATION H01", 30, 40);
+        g2.drawString("PLANIFICATION AVEC CAPACITÉS", 30, 40);
 
         g2.setFont(new Font("Arial", Font.PLAIN, 12));
-        g2.drawString("6 secteurs • " + (grapheSecteurs != null ? grapheSecteurs.aretes.size() : 0) + " connexions", 30, 60);
-        g2.drawString(joursUtilises.size() + " jours nécessaires", 30, 80);
+        g2.drawString("Contraintes respectées:", 30, 60);
+        g2.drawString("• Voisins ≠ même jour", 40, 80);
+        g2.drawString("• 1 tournée/secteur/jour", 40, 100);
+        g2.drawString("• Camion: 15 tonnes max", 40, 120);
+        g2.drawString("• 2 camions simultanés", 40, 140);
+        g2.drawString("• Capacité max/jour: 30 tonnes", 40, 160);
 
-        g2.drawString("Couleurs des jours:", 30, 100);
 
-        int y = 120;
-        int x = 30;
-
-        for (int jour : joursUtilises) {
-            int couleurIndex = jour % couleursJours.length;
-
-            g2.setColor(couleursJours[couleurIndex]);
-            g2.fillRect(x, y - 10, 15, 15);
-            g2.setColor(Color.BLACK);
-            g2.drawRect(x, y - 10, 15, 15);
-
-            g2.drawString("Jour " + (jour + 1), x + 20, y);
-
-            y += 20;
-
-            if (y > 180) {
-                y = 120;
-                x += 120;
-            }
+        if (planning != null) {
+            g2.drawString("Jours nécessaires: " + planning.size(), 30, 180);
+            g2.drawString("Taux remplissage moyen: " +
+                    calculerTauxRemplissage() + "%", 30, 200);
         }
+    }
+
+    private void dessinerPlanning(Graphics2D g2) {
+        if (planning == null || planning.isEmpty()) return;
+
+
+        int xStart = 900;
+        int yStart = 50;
+
+        g2.setColor(new Color(240, 240, 255, 240));
+        g2.fillRect(xStart - 20, yStart - 30, 380, 400);
+        g2.setColor(new Color(100, 100, 150));
+        g2.drawRect(xStart - 20, yStart - 30, 380, 400);
+
+
+        g2.setFont(new Font("Arial", Font.BOLD, 16));
+        g2.drawString("DÉTAIL PAR JOUR", xStart, yStart);
+
+        g2.setFont(new Font("Arial", Font.PLAIN, 12));
+        int y = yStart + 30;
+
+        ArrayList<Integer> jours = new ArrayList<>(planning.keySet());
+        Collections.sort(jours);
+
+        for (int jour : jours) {
+            ArrayList<NoeudSecteur> secteurs = planning.get(jour);
+            int total = secteurs.stream().mapToInt(s -> s.quantiteDechets).sum();
+
+
+            int couleurIndex = jour % couleursJours.length;
+            g2.setColor(couleursJours[couleurIndex]);
+            g2.fillRect(xStart, y - 10, 15, 15);
+            g2.setColor(Color.BLACK);
+            g2.drawRect(xStart, y - 10, 15, 15);
+
+
+            g2.drawString("Jour " + (jour + 1) + ":", xStart + 25, y);
+            g2.drawString(total + "/30 tonnes", xStart + 100, y);
+
+            int barreWidth = 150;
+            int remplissageWidth = (total * barreWidth) / CAPACITE_MAX_PAR_JOUR;
+
+            g2.setColor(new Color(200, 200, 200));
+            g2.fillRect(xStart + 180, y - 8, barreWidth, 10);
+            g2.setColor(couleursJours[couleurIndex]);
+            g2.fillRect(xStart + 180, y - 8, remplissageWidth, 10);
+            g2.setColor(Color.BLACK);
+            g2.drawRect(xStart + 180, y - 8, barreWidth, 10);
+
+
+            int pourcentage = (total * 100) / CAPACITE_MAX_PAR_JOUR;
+            g2.drawString(pourcentage + "%", xStart + 340, y);
+
+
+            String secteursStr = secteurs.stream()
+                    .map(s -> s.nom + "(" + s.quantiteDechets + ")")
+                    .reduce((a, b) -> a + "," + b)
+                    .orElse("");
+
+            if (secteursStr.length() > 30) {
+                secteursStr = secteursStr.substring(0, 30) + "...";
+            }
+
+            g2.drawString(secteursStr, xStart, y + 15);
+
+            y += 40;
+        }
+    }
+
+    private int calculerTauxRemplissage() {
+        if (planning == null || planning.isEmpty()) return 0;
+
+        int totalDechets = 0;
+        for (ArrayList<NoeudSecteur> secteurs : planning.values()) {
+            totalDechets += secteurs.stream().mapToInt(s -> s.quantiteDechets).sum();
+        }
+
+        int capaciteTotale = CAPACITE_MAX_PAR_JOUR * planning.size();
+        return (totalDechets * 100) / capaciteTotale;
     }
 }
