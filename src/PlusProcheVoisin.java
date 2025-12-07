@@ -3,9 +3,6 @@ import java.io.IOException;
 
 public class PlusProcheVoisin {
 
-    // ---------------------------------------------------------
-    //   Classes internes pour stocker un résultat complet PPV
-    // ---------------------------------------------------------
 
     public static class Etape {
         public String depart;
@@ -26,17 +23,13 @@ public class PlusProcheVoisin {
         public double distanceTotale = 0.0;
     }
 
-
-    // ---------------------------------------------------------
-    //       ALGORITHME DU PLUS PROCHE VOISIN (PPV)
-    // ---------------------------------------------------------
     public static ResultatPPV calculer(Depot depot, List<PointCollecte> points)
             throws Exception {
 
         List<PointCollecte> restant = new ArrayList<>(points);
         ResultatPPV resultat = new ResultatPPV();
 
-        String courant = depot.getSommetId();  // ID du sommet de départ
+        String courant = depot.getSommetId();
 
         while (!restant.isEmpty()) {
 
@@ -44,7 +37,6 @@ public class PlusProcheVoisin {
             double meilleureDist = Double.MAX_VALUE;
             DijkstraNice.CheminResult meilleurChemin = null;
 
-            // --- Chercher le point le plus proche parmi ceux non visités ---
             for (PointCollecte pc : restant) {
                 DijkstraNice.CheminResult res;
 
@@ -65,7 +57,6 @@ public class PlusProcheVoisin {
                 throw new Exception("Aucun point accessible depuis : " + courant);
             }
 
-            // --- Enregistrer l’étape ---
             resultat.etapes.add(
                     new Etape(
                             courant,
@@ -77,14 +68,10 @@ public class PlusProcheVoisin {
 
             resultat.distanceTotale += meilleureDist;
 
-            // --- Passage au point suivant ---
             courant = meilleur.getSommetId();
             restant.remove(meilleur);
         }
 
-        // ---------------------------------------------------------
-        //                RETOUR AU DÉPÔT
-        // ---------------------------------------------------------
         try {
             DijkstraNice.CheminResult retour = DijkstraNice.dijkstra(courant, depot.getSommetId());
 
