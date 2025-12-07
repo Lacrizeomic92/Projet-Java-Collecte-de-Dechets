@@ -13,7 +13,7 @@ public class Theme3 extends JFrame {
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
-
+        
         URL imgUrl = Theme3.class.getResource("/Theme3.png");
 
         if (imgUrl == null) {
@@ -33,18 +33,11 @@ public class Theme3 extends JFrame {
         imageLabel.setFocusable(true);
         setContentPane(imageLabel);
 
-        // ===============================
-        //     GESTION DU CLAVIER
-        // ===============================
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
 
                 switch (e.getKeyCode()) {
-
-                    // ===============================
-                    // BOUTON 1 (De la deuxième version) : AFFICHER PNG
-                    // ===============================
                     case KeyEvent.VK_1:
                         dispose();
 
@@ -54,7 +47,6 @@ public class Theme3 extends JFrame {
                             f.setLocationRelativeTo(null);
                             f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-                            // Charger le PNG depuis /src/
                             File pngFile = new File("src/division_commune.png");
 
                             if (!pngFile.exists()) {
@@ -66,18 +58,15 @@ public class Theme3 extends JFrame {
                                 return;
                             }
 
-                            // Charger et REDIMENSIONNER l'image
                             ImageIcon rawIcon = new ImageIcon(pngFile.getAbsolutePath());
                             Image rawImg = rawIcon.getImage();
 
-                            // Taille cible pour bien remplir la fenêtre
                             int targetWidth = 1100;
                             int targetHeight = 700;
 
                             Image scaledImg = rawImg.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
                             ImageIcon scaledIconImg = new ImageIcon(scaledImg);
 
-                            // Affichage
                             JLabel lab = new JLabel(scaledIconImg);
                             lab.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -95,10 +84,6 @@ public class Theme3 extends JFrame {
                                     JOptionPane.ERROR_MESSAGE);
                         }
                         break;
-
-                    // ===============================
-                    // BOUTON 2 (De la première version) : Gestionnaire avec capacités
-                    // ===============================
                     case KeyEvent.VK_2:
                         dispose();
                         try {
@@ -111,7 +96,6 @@ public class Theme3 extends JFrame {
                         }
                         break;
 
-                    // OPTION 3 (optionnel, depuis la deuxième version)
                     case KeyEvent.VK_3:
                         JOptionPane.showMessageDialog(null,
                                 "Option 3 - À implémenter",
@@ -119,22 +103,17 @@ public class Theme3 extends JFrame {
                                 JOptionPane.INFORMATION_MESSAGE);
                         break;
 
-                    // ===============================
-                    //     RETOUR AU MENU PRINCIPAL
-                    // ===============================
                     case KeyEvent.VK_ESCAPE:
                     case KeyEvent.VK_BACK_SPACE:
                         dispose();
                         new ChoixHypotheses();
                         break;
 
-                    // ALTERNATIVE POUR RETOUR
                     case KeyEvent.VK_SPACE:
                         dispose();
                         new ChoixHypotheses();
                         break;
 
-                    // RETOUR AU MENU PRINCIPAL (option 0 depuis la deuxième version)
                     case KeyEvent.VK_0:
                         dispose();
                         new MenuPrincipal(1);
