@@ -13,7 +13,6 @@ public class Theme1_HO2 extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // ===== CHARGEMENT DE L’IMAGE =====
         URL imgUrl = Theme1_HO2.class.getResource("/Theme1_HO2.png");
 
         if (imgUrl == null) {
@@ -28,29 +27,25 @@ public class Theme1_HO2 extends JFrame {
         Image scaled = icon.getImage().getScaledInstance(900, 600, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaled);
 
-        // ===== LABEL DE L’IMAGE =====
         JLabel imageLabel = new JLabel(scaledIcon);
         imageLabel.setFocusable(true);
         setContentPane(imageLabel);
 
-        // ===== TOUCHES CLAVIER =====
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
 
-                // 1 → Itinéraire HO2
+
                 if (e.getKeyCode() == KeyEvent.VK_1) {
                     dispose();
                     new ItineraireDeuxPoints_HO2();
                 }
 
-                // 2 → Multipoints HO2
                 if (e.getKeyCode() == KeyEvent.VK_2) {
                     dispose();
                     new ItineraireMultiPoints_HO2();
                 }
 
-                // ESC → Retour au menu principal (HO2)
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     dispose();
                     new MenuPrincipal(2);
@@ -58,7 +53,7 @@ public class Theme1_HO2 extends JFrame {
             }
         });
 
-        // Donner le focus pour capturer les touches
+
         SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
 
         setVisible(true);
