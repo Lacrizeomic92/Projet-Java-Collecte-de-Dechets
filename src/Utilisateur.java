@@ -56,7 +56,7 @@ public class Utilisateur extends JFrame {
         });
 
         SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
-        w
+        
         Timer focusTimer = new Timer(100, e -> imageLabel.requestFocusInWindow());
         focusTimer.setRepeats(false);
         focusTimer.start();
