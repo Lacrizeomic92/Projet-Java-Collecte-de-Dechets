@@ -14,14 +14,11 @@ public class Theme3 extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // ===============================
-        //   CHARGEMENT DE L'IMAGE Theme3.jpg
-        // ===============================
-        URL imgUrl = Theme3.class.getResource("/Theme3.jpg");
+        URL imgUrl = Theme3.class.getResource("/Theme3.png");
 
         if (imgUrl == null) {
             JOptionPane.showMessageDialog(this,
-                    "Impossible de trouver Theme3.jpg\n" +
+                    "Impossible de trouver Theme3.png\n" +
                             "Assure-toi qu'elle est bien dans src/",
                     "Erreur image",
                     JOptionPane.ERROR_MESSAGE);
@@ -46,7 +43,7 @@ public class Theme3 extends JFrame {
                 switch (e.getKeyCode()) {
 
                     // ===============================
-                    // OPTION 1 -> AFFICHER PNG
+                    // BOUTON 1 (De la deuxième version) : AFFICHER PNG
                     // ===============================
                     case KeyEvent.VK_1:
                         dispose();
@@ -99,15 +96,22 @@ public class Theme3 extends JFrame {
                         }
                         break;
 
-                    // OPTION 2
+                    // ===============================
+                    // BOUTON 2 (De la première version) : Gestionnaire avec capacités
+                    // ===============================
                     case KeyEvent.VK_2:
-                        JOptionPane.showMessageDialog(null,
-                                "Option 2 - À implémenter",
-                                "Information",
-                                JOptionPane.INFORMATION_MESSAGE);
+                        dispose();
+                        try {
+                            new GestionnaireCollecteAvecCapacites().demarrer();
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(null,
+                                    "Erreur lors du démarrage du gestionnaire:\n" + ex.getMessage(),
+                                    "Erreur",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
                         break;
 
-                    // OPTION 3
+                    // OPTION 3 (optionnel, depuis la deuxième version)
                     case KeyEvent.VK_3:
                         JOptionPane.showMessageDialog(null,
                                 "Option 3 - À implémenter",
@@ -115,14 +119,22 @@ public class Theme3 extends JFrame {
                                 JOptionPane.INFORMATION_MESSAGE);
                         break;
 
-                    // ===== RETOUR =====
+                    // ===============================
+                    //     RETOUR AU MENU PRINCIPAL
+                    // ===============================
                     case KeyEvent.VK_ESCAPE:
                     case KeyEvent.VK_BACK_SPACE:
+                        dispose();
+                        new ChoixHypotheses();
+                        break;
+
+                    // ALTERNATIVE POUR RETOUR
                     case KeyEvent.VK_SPACE:
                         dispose();
                         new ChoixHypotheses();
                         break;
 
+                    // RETOUR AU MENU PRINCIPAL (option 0 depuis la deuxième version)
                     case KeyEvent.VK_0:
                         dispose();
                         new MenuPrincipal(1);
