@@ -36,21 +36,18 @@ public class Utilisateur extends JFrame {
             @Override
             public void keyPressed(KeyEvent e) {
 
-                // ----------- 🔹 OPTION 1 : COLLECTIVITÉ -----------
                 if (e.getKeyCode() == KeyEvent.VK_1) {
                     choixUtilisateur = 1;
                     dispose();
                     new Collectivite();
                 }
 
-                // ----------- 🔹 OPTION 2 : CHOIX DES HYPOTHÈSES -----------
                 if (e.getKeyCode() == KeyEvent.VK_2) {
                     choixUtilisateur = 2;
                     dispose();
-                    new ChoixHypotheses();  // 👈 ouverture correcte
+                    new ChoixHypotheses();
                 }
 
-                // ----------- 🔹 RETOUR (ÉCHAP) -----------
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     dispose();
                     new Accueil();
@@ -58,10 +55,8 @@ public class Utilisateur extends JFrame {
             }
         });
 
-        // Focus clavier sur l'image
         SwingUtilities.invokeLater(imageLabel::requestFocusInWindow);
-
-        // Sécurisation du focus
+        w
         Timer focusTimer = new Timer(100, e -> imageLabel.requestFocusInWindow());
         focusTimer.setRepeats(false);
         focusTimer.start();
