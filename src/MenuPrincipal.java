@@ -6,7 +6,7 @@ import java.net.URL;
 
 public class MenuPrincipal extends JFrame {
 
-    private int hypothese;  // 1 = HO1, 2 = HO2, 3 = HO3
+    private int hypothese;
 
     public MenuPrincipal(int hypotheseChoisie) {
 
@@ -17,9 +17,7 @@ public class MenuPrincipal extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // ===============================
-        //   CHARGEMENT DE L'IMAGE menu.png
-        // ===============================
+
         URL imgUrl = MenuPrincipal.class.getResource("/menu.png");
 
         if (imgUrl == null) {
@@ -38,47 +36,43 @@ public class MenuPrincipal extends JFrame {
         imageLabel.setFocusable(true);
         setContentPane(imageLabel);
 
-        // ===============================
-        //     GESTION DES TOUCHES
-        // ===============================
+
         imageLabel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
 
-                // ======= THÈME 1 =======
                 if (e.getKeyCode() == KeyEvent.VK_1) {
                     dispose();
 
                     if (hypothese == 1)
-                        new Theme1();          // HO1 — double sens
+                        new Theme1();
                     else if (hypothese == 2)
-                        new Theme1_HO2();      // HO2 — sens unique
+                        new Theme1_HO2();
                     else
                         JOptionPane.showMessageDialog(null,
                                 "HO3 n'est pas encore disponible !");
                 }
 
-                // ======= THÈME 2 =======
                 if (e.getKeyCode() == KeyEvent.VK_2) {
                     dispose();
 
                     try {
-                        new Theme2();          // Thème 2 disponible pour toutes les hypothèses
+                        new Theme2();
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(null,
                                 "Erreur lors de l'ouverture du Thème 2 : " + ex.getMessage());
                     }
                 }
 
-                // ======= THÈME 3 =======
                 if (e.getKeyCode() == KeyEvent.VK_3) {
                     dispose();
-                    new Theme3();              // Thème 3 — Collecte de déchets (ou autre nom)
+                    new Theme3();
                 }
 
-                // ======= RETOUR =======
+
                 if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE ||
-                        e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                        e.getKeyCode() == KeyEvent.VK_ESCAPE ||
+                        e.getKeyCode() == KeyEvent.VK_SPACE) {    // ← AJOUT EXCLUSIF
 
                     dispose();
                     new ChoixHypotheses();
