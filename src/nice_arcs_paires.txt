@@ -1,0 +1,10 @@
+A;B;50;Rue_AB
+B;C;60;Rue_BC
+C;D;55;Rue_CD
+D;E;70;Rue_DE
+E;F;65;Rue_EF
+F;G;80;Rue_FG
+G;H;75;Rue_GH
+H;I;60;Rue_HI
+I;J;55;Rue_IJ
+J;A;70;Rue_JA
